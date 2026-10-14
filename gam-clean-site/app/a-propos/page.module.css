@@ -1,0 +1,87 @@
+.intro {
+  display: grid;
+  gap: var(--sp-7);
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .intro {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: var(--sp-8);
+  }
+}
+
+.intro :global(.section-head) {
+  margin-bottom: var(--sp-5);
+}
+
+.text {
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: var(--fs-lg);
+}
+
+.photo {
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-3);
+}
+
+.photo img {
+  width: 100%;
+  aspect-ratio: 4 / 3.4;
+  object-fit: cover;
+}
+
+.legal {
+  display: grid;
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .legal {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-8);
+  }
+}
+
+.dl {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.dlRow {
+  display: grid;
+  gap: var(--sp-1) var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.dlRow:last-child {
+  border-bottom: 0;
+}
+
+.dlRow:nth-child(odd) {
+  background: var(--mist);
+}
+
+@media (min-width: 640px) {
+  .dlRow {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+
+.dlRow dt {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.dlRow dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}

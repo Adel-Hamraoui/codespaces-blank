@@ -1,0 +1,193 @@
+.wrap {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+.featured {
+  list-style: none;
+  display: grid;
+  gap: var(--sp-5);
+}
+
+@media (min-width: 640px) {
+  .featured {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* La première carte occupe deux colonnes : 5 cartes remplissent la grille sans trou. */
+  .wide {
+    grid-column: span 2;
+  }
+  .wide .media {
+    aspect-ratio: 21 / 9;
+  }
+}
+
+@media (min-width: 1024px) {
+  .featured {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Carte entièrement cliquable : le lien du titre couvre la carte (::after). */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-1);
+  transition:
+    box-shadow var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+
+.card:hover,
+.other:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--sh-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.card:focus-within,
+.other:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: var(--mist-2);
+}
+
+.img {
+  object-fit: cover;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .img {
+    transition: transform 400ms var(--ease);
+  }
+  .card:hover .img {
+    transform: scale(1.03);
+  }
+}
+
+.body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: var(--sp-5);
+}
+
+.body p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.icon {
+  position: absolute;
+  top: -24px;
+  left: var(--sp-5);
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--green-700);
+  box-shadow: var(--sh-2);
+}
+
+.title {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-size: var(--fs-h3);
+}
+
+.link {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.link:focus-visible {
+  outline: none;
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin-top: auto;
+  font-family: var(--font-heading);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--green-700);
+}
+
+/* ---------- Prestations complémentaires ---------- */
+.others {
+  list-style: none;
+  display: grid;
+  gap: var(--sp-5);
+}
+
+@media (min-width: 900px) {
+  .others {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.other {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 20px;
+  gap: var(--sp-4);
+  align-items: center;
+  padding: var(--sp-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--sh-1);
+  transition:
+    box-shadow var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.other .title {
+  margin: 0 0 var(--sp-1);
+}
+
+.other p {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.iconDark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--navy-900);
+  color: var(--mint-300);
+}
+
+.otherArrow {
+  color: var(--green-700);
+}

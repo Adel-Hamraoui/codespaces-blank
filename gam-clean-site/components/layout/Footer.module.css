@@ -1,0 +1,131 @@
+.footer {
+  background: var(--navy-950);
+  color: var(--on-dark-muted);
+  font-size: var(--fs-sm);
+}
+
+.footer a {
+  color: var(--on-dark-muted);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.grid {
+  display: grid;
+  gap: var(--sp-7) var(--sp-6);
+  padding-block: var(--sp-8) var(--sp-7);
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+  }
+}
+
+.about p {
+  max-width: 34ch;
+  margin-block: var(--sp-4) var(--sp-5);
+}
+
+.about :global(.btn) {
+  color: var(--navy-950);
+}
+
+.about :global(.btn):hover {
+  color: var(--navy-950);
+  text-decoration: none;
+}
+
+.logo {
+  width: auto;
+  height: 36px;
+}
+
+.title {
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.list {
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+
+.list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+}
+
+.contact {
+  list-style: none;
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.contact li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: start;
+}
+
+.contact svg {
+  margin-top: 3px;
+  color: var(--mint-300);
+}
+
+.contact a {
+  overflow-wrap: anywhere;
+  color: #fff;
+}
+
+.bottom {
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+}
+
+.bottom {
+  padding-bottom: var(--mobile-bar-h); /* espace réservé à la barre d'actions mobile */
+}
+
+.bottomInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-5);
+  padding-block: var(--sp-5);
+}
+
+.bottomInner p {
+  margin: 0;
+  color: var(--on-dark-muted);
+}
+
+.legal {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+}
+
+.legal a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+}

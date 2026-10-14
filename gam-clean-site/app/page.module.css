@@ -1,0 +1,123 @@
+.headRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4) var(--sp-6);
+  margin-bottom: var(--sp-7);
+}
+
+.headRow > :first-child {
+  margin-bottom: 0;
+}
+
+.headLink {
+  margin-bottom: var(--sp-2);
+}
+
+/* ---------- Méthode ---------- */
+.methodGrid {
+  display: grid;
+  gap: var(--sp-6);
+  align-items: center;
+  margin-bottom: var(--sp-7);
+}
+
+@media (min-width: 1024px) {
+  .methodGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+    gap: var(--sp-8);
+  }
+}
+
+.methodGrid :global(.section-head) {
+  margin-bottom: var(--sp-5);
+}
+
+.methodVisual {
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-2);
+}
+
+.methodImg {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: 50% 35%;
+}
+
+/* ---------- Secteurs ---------- */
+.sectors {
+  list-style: none;
+  display: grid;
+  gap: var(--sp-3);
+}
+
+@media (min-width: 640px) {
+  .sectors {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .sectors {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.sector {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 18px;
+  gap: var(--sp-4);
+  align-items: center;
+  min-height: 76px;
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+
+.sector:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--sh-2);
+  text-decoration: none;
+}
+
+.sectorIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--mint-50);
+  color: var(--green-700);
+}
+
+.sectorName {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.sectorArrow {
+  color: var(--green-700);
+}
+
+/* ---------- FAQ ---------- */
+.faqGrid {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+@media (min-width: 1024px) {
+  .faqGrid {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--sp-8);
+    align-items: start;
+  }
+}

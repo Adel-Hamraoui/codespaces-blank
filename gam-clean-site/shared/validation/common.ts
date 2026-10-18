@@ -11,6 +11,9 @@ export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/
 /** Chaîne nettoyée et tronquée ('' si la valeur n'est pas une chaîne). */
 export const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
 
+/** Champ d'une seule ligne : caractères de contrôle (retours à la ligne, tabulations) remplacés par des espaces. */
+export const line = (v: unknown, max: number) => str(typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]+/g, ' ') : v, max)
+
 /** Chaîne optionnelle : null si vide. */
 export const optStr = (v: unknown, max: number) => str(v, max) || null
 

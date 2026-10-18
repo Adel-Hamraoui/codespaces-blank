@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 import { Search } from 'lucide-react'
 import { FaqList, type FaqEntry } from './FaqList'
 import styles from './FaqList.module.css'
@@ -13,21 +13,23 @@ const normalize = (s: string) =>
     .toLowerCase()
 
 /**
- * FAQ avec recherche instantanée. Sans JavaScript, toutes les questions
- * restent affichées et le champ de recherche n'apparaît pas.
+ * FAQ avec recherche instantanée. Le champ est présent dès l'affichage (aucun
+ * décalage de mise en page) ; sans JavaScript, il est masqué et toutes les
+ * questions restent visibles.
  */
 export function FaqExplorer({ items }: { items: FaqEntry[] }) {
   const id = useId()
   const [query, setQuery] = useState('')
-  const [enhanced, setEnhanced] = useState(false)
-  useEffect(() => setEnhanced(true), [])
 
   const q = normalize(query.trim())
   const shown = q ? items.filter((i) => normalize(`${i.question} ${i.answer}`).includes(q)) : items
 
   return (
     <>
-      <div className={styles.search} hidden={!enhanced}>
+      <noscript>
+        <style>{`.${styles.search}{display:none}`}</style>
+      </noscript>
+      <div className={styles.search}>
         <label htmlFor={id} className={styles.searchLabel}>
           Rechercher une question
         </label>

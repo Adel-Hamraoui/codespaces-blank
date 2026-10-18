@@ -7,10 +7,9 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 
-# environnement (ne jamais commiter de secrets)
-.env
-.env.local
-.env.*.local
+# environnement (ne jamais commiter de secrets) : tous les fichiers .env sauf le modèle
+.env*
+!.env.example
 
 # Vercel
 .vercel

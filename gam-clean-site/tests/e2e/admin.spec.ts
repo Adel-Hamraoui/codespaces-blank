@@ -2,7 +2,7 @@
 // Back-office : scénario complet, dans l'ordre réel d'utilisation.
 // S'exécute après les tests publics (qui ont créé des demandes).
 // ============================================================================
-import { expect, test, type Browser, type Page } from '@playwright/test'
+import { expect, test, type Browser, type Locator, type Page } from '@playwright/test'
 import { collectPageErrors, expectNoSeriousA11yViolations, ownerAccount, testDb } from './helpers'
 
 test.describe.configure({ mode: 'serial' })
@@ -14,10 +14,18 @@ let page: Page
 let invitationLink = ''
 let pageErrors: string[] = []
 
+/**
+ * Champ de formulaire par son étiquette exacte, parmi les éléments visibles :
+ * Next.js garde la page précédente en mémoire (masquée) lors d'une navigation
+ * interne, ses champs ne doivent pas être confondus avec ceux de la page affichée.
+ */
+const field = (scope: Page | Locator, label: string) =>
+  scope.getByLabel(new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s*\\*)?$`)).filter({ visible: true })
+
 async function login(p: Page, email: string, password: string) {
   await p.goto('/admin/connexion')
-  await p.getByLabel('Adresse e-mail').fill(email)
-  await p.getByLabel('Mot de passe').fill(password)
+  await field(p, 'Adresse e-mail').fill(email)
+  await field(p, 'Mot de passe').fill(password)
   await p.getByRole('button', { name: 'Se connecter' }).click()
 }
 
@@ -28,20 +36,22 @@ async function logout(p: Page) {
 
 async function changeFirstPassword(p: Page, current: string, next: string) {
   await expect(p).toHaveURL(/\/admin\/compte\?premiere=1$/)
-  await p.getByLabel('Mot de passe provisoire').fill(current)
-  await p.getByLabel('Nouveau mot de passe').fill(next)
-  await p.getByLabel('Confirmation').fill(next)
+  await field(p, 'Mot de passe provisoire').fill(current)
+  await field(p, 'Nouveau mot de passe').fill(next)
+  await field(p, 'Confirmation').fill(next)
   await p.getByRole('button', { name: 'Enregistrer le mot de passe' }).click()
   await expect(p).toHaveURL(/\/admin\?bienvenue=1$/)
 }
 
 test.beforeAll(async ({ browser }: { browser: Browser }) => {
-  page = await browser.newPage()
+  // Contexte explicite (requis par l'analyse d'accessibilité axe).
+  const context = await browser.newContext()
+  page = await context.newPage()
   pageErrors = collectPageErrors(page)
 })
 
 test.afterAll(async () => {
-  await page.close()
+  await page.context().close()
 })
 
 test('accès protégé : redirection vers la connexion avec retour prévu', async () => {
@@ -54,7 +64,7 @@ test('mauvais mot de passe : message générique', async () => {
   await login(page, owner.email, 'mauvais mot de passe')
   await expect(page.getByRole('alert').filter({ hasText: 'Identifiants incorrects' })).toBeVisible()
   // La saisie de l'e-mail est conservée après l'erreur.
-  await expect(page.getByLabel('Adresse e-mail')).toHaveValue(owner.email)
+  await expect(field(page, 'Adresse e-mail')).toHaveValue(owner.email)
 })
 
 test('première connexion : changement de mot de passe obligatoire', async () => {
@@ -77,15 +87,18 @@ test('demandes : recherche sans accents, filtres et onglets', async () => {
   await page.goto('/admin/demandes')
   const rows = page.locator('table tbody tr')
   await expect(rows).toHaveCount(3)
-  await page.getByLabel('Rechercher').fill('NOISY')
+  await field(page, 'Rechercher').fill('NOISY')
   await page.getByRole('button', { name: 'Filtrer' }).click()
   await expect(rows).toHaveCount(1)
   await expect(rows.first()).toContainText('Claire Fontaine')
   await page.getByRole('link', { name: 'Effacer' }).click()
-  await page.getByLabel('Type').selectOption({ label: 'Message' })
+  await page.getByText('Plus de filtres').click() // filtres secondaires repliés par défaut
+  await field(page, 'Type').selectOption({ label: 'Message' })
   await page.getByRole('button', { name: 'Filtrer' }).click()
   await expect(rows).toHaveCount(1)
   await expect(rows.first()).toContainText('Paul Contact')
+  // Un filtre secondaire actif garde la section ouverte et signale son nombre.
+  await expect(page.locator('details', { hasText: 'Plus de filtres' })).toHaveAttribute('open', '')
   await page.goto('/admin/demandes?statut=won')
   await expect(page.getByText('Aucune demande ne correspond')).toBeVisible()
 })
@@ -96,18 +109,18 @@ test('fiche d’une demande : statut, note, suivi et historique', async () => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Claire Fontaine')
   await expect(page.getByRole('region', { name: 'Détails de la demande' })).toContainText('1 250 m²')
 
-  await page.getByLabel('Statut').selectOption({ label: 'Gagnée' })
+  await field(page, 'Statut').selectOption({ label: 'Gagnée' })
   await page.getByRole('button', { name: 'Mettre à jour' }).click()
   await expect(page.getByText('Statut mis à jour.')).toBeVisible()
   await expect(page.getByRole('region', { name: 'Historique' })).toContainText('Statut : Nouvelle → Gagnée')
 
-  await page.getByLabel('Ajouter une note interne').fill('Visite fixée mardi à 9 h.')
+  await field(page, 'Ajouter une note interne').fill('Visite fixée mardi à 9 h.')
   await page.getByRole('button', { name: 'Enregistrer la note' }).click()
   await expect(page.getByText('Note ajoutée.')).toBeVisible()
-  await expect(page.getByLabel('Ajouter une note interne')).toHaveValue('') // formulaire vidé après succès
+  await expect(field(page, 'Ajouter une note interne')).toHaveValue('') // formulaire vidé après succès
   await expect(page.getByRole('region', { name: 'Historique' })).toContainText('Visite fixée mardi à 9 h.')
 
-  await page.getByLabel('Suivi par').selectOption({ label: 'Propriétaire E2E' })
+  await field(page, 'Suivi par').selectOption({ label: 'Propriétaire E2E' })
   await page.getByRole('button', { name: 'Assigner' }).click()
   await expect(page.getByRole('region', { name: 'Historique' })).toContainText('Suivi confié à Propriétaire E2E')
 
@@ -127,9 +140,9 @@ test('fiche d’une demande : statut, note, suivi et historique', async () => {
 
 test('invitation à laisser un avis (demande gagnée)', async () => {
   const panel = page.getByRole('region', { name: 'Avis client' })
-  await panel.getByLabel('Envoyer le lien par e-mail').uncheck()
+  await field(panel, 'Envoyer le lien par e-mail').uncheck()
   await panel.getByRole('button', { name: 'Créer l’invitation' }).click()
-  const link = panel.getByLabel('Lien personnel à transmettre au client')
+  const link = field(panel, 'Lien personnel à transmettre au client')
   await expect(link).toHaveValue(/\/avis\/[A-Za-z0-9_-]{43}$/)
   invitationLink = await link.inputValue()
 })
@@ -141,10 +154,10 @@ test('dépôt d’un avis par le client : lien personnel à usage unique', async
     await expect(client.getByText('Bonjour Claire Fontaine')).toBeVisible()
     await client.getByRole('button', { name: 'Envoyer mon avis' }).click()
     await expect(client.getByText('Choisissez une note globale')).toBeVisible()
-    await client.getByLabel('Votre commentaire').fill('Équipe ponctuelle et travail soigné, merci !')
-    await expect(client.getByLabel('Votre commentaire')).toHaveValue('Équipe ponctuelle et travail soigné, merci !')
+    await field(client, 'Votre commentaire').fill('Équipe ponctuelle et travail soigné, merci !')
+    await expect(field(client, 'Votre commentaire')).toHaveValue('Équipe ponctuelle et travail soigné, merci !')
     await client.getByRole('group', { name: /Votre note globale/ }).getByRole('radio', { name: '5 sur 5' }).check()
-    await client.getByLabel('Nom affiché').fill('Claire F.')
+    await field(client, 'Nom affiché').fill('Claire F.')
     await client.getByRole('checkbox', { name: /J’accepte que mon avis/ }).check()
     await client.getByRole('button', { name: 'Envoyer mon avis' }).click()
     await expect(client.getByRole('heading', { name: 'Merci Claire Fontaine !' })).toBeVisible()
@@ -179,12 +192,12 @@ test('modération : l’avis publié apparaît sur le site', async ({ browser })
 
 test('contenus : erreur de saisie conservée, puis publication immédiate', async ({ browser }) => {
   await page.goto('/admin/contenu/coordonnees')
-  await page.getByLabel('Délai de réponse').fill('sous 48 heures ouvrées')
-  await page.getByLabel('SIRET').fill('123')
+  await field(page, 'Délai de réponse').fill('sous 48 heures ouvrées')
+  await field(page, 'SIRET').fill('123')
   await page.getByRole('button', { name: 'Enregistrer et publier' }).click()
   await expect(page.getByText('Le SIRET comporte 14 chiffres.')).toBeVisible()
-  await expect(page.getByLabel('Délai de réponse')).toHaveValue('sous 48 heures ouvrées') // saisie non perdue
-  await page.getByLabel('SIRET').fill('103 309 571 00018')
+  await expect(field(page, 'Délai de réponse')).toHaveValue('sous 48 heures ouvrées') // saisie non perdue
+  await field(page, 'SIRET').fill('103 309 571 00018')
   await page.getByRole('button', { name: 'Enregistrer et publier' }).click()
   await expect(page.getByText('Modifications enregistrées et publiées sur le site.')).toBeVisible()
 
@@ -199,13 +212,13 @@ test('contenus : erreur de saisie conservée, puis publication immédiate', asyn
 
 test('prestations : création (page publique générée à la demande) puis suppression', async ({ browser }) => {
   await page.goto('/admin/contenu/prestations/nouvelle')
-  await page.getByLabel('Nom (menus, cartes)').fill('Désinfection E2E')
-  await page.getByLabel('Résumé (une phrase)').fill('Prestation de démonstration créée par les tests automatiques.')
-  await page.getByLabel('Titre de la page (H1)').fill('Désinfection de locaux (test)')
-  await page.getByLabel('Introduction').fill('Page créée par un test de bout en bout.')
-  await page.getByLabel('Titre Google').fill('Désinfection de locaux – test automatique')
-  await page.getByLabel('Description Google').fill('Description de démonstration suffisamment longue pour respecter les contraintes de référencement.')
-  await page.getByLabel('Publiée sur le site').check()
+  await field(page, 'Nom (menus, cartes)').fill('Désinfection E2E')
+  await field(page, 'Résumé (une phrase)').fill('Prestation de démonstration créée par les tests automatiques.')
+  await field(page, 'Titre de la page (H1)').fill('Désinfection de locaux (test)')
+  await field(page, 'Introduction').fill('Page créée par un test de bout en bout.')
+  await field(page, 'Titre Google').fill('Désinfection de locaux – test automatique')
+  await field(page, 'Description Google').fill('Description de démonstration suffisamment longue pour respecter les contraintes de référencement.')
+  await field(page, 'Publiée sur le site').check()
   await page.getByRole('button', { name: 'Créer la prestation' }).click()
   await expect(page).toHaveURL(/\/admin\/contenu\/prestations\/\d+\?cree=1$/)
   await expect(page.getByText('Prestation créée.')).toBeVisible()
@@ -259,9 +272,9 @@ test('export CSV : réservé, lisible dans Excel, formules neutralisées', async
 test('comptes : création d’un commercial (mot de passe provisoire affiché une fois)', async () => {
   await page.goto('/admin/utilisateurs')
   const panel = page.getByRole('region', { name: 'Nouveau compte' })
-  await panel.getByLabel('Nom affiché').fill(sales.name)
-  await panel.getByLabel('E-mail').fill(sales.email)
-  await panel.getByLabel('Rôle').selectOption('sales')
+  await field(panel, 'Nom affiché').fill(sales.name)
+  await field(panel, 'E-mail').fill(sales.email)
+  await field(panel, 'Rôle').selectOption('sales')
   await panel.getByRole('button', { name: 'Créer le compte' }).click()
   const secret = panel.locator('code, span').filter({ hasText: /^[A-Za-z0-9]{20}$/ })
   await expect(secret).toBeVisible()

@@ -1,7 +1,7 @@
 // ============================================================================
 // Avis clients (formulaire /avis/[jeton]) et invitations (back-office).
 // ============================================================================
-import { bool, isEmail, normalizeEmail, optStr, str, type FieldErrors } from './common'
+import { bool, isEmail, line, normalizeEmail, optStr, str, type FieldErrors } from './common'
 
 export type ReviewInput = {
   rating: number
@@ -27,8 +27,8 @@ export function validateReview(input: Record<string, unknown>) {
     ratingPunctuality: rating(input.ratingPunctuality),
     ratingCommunication: rating(input.ratingCommunication),
     comment: str(input.comment, 2000),
-    authorName: str(input.authorName, 80),
-    authorCompany: optStr(input.authorCompany, 120),
+    authorName: line(input.authorName, 80),
+    authorCompany: line(input.authorCompany, 120) || null,
     serviceSlug: optStr(input.serviceSlug, 80),
     consentPublish: bool(input.consentPublish),
   }
@@ -44,7 +44,7 @@ export type ReviewRequestInput = { clientName: string; clientEmail: string | nul
 export function validateReviewRequest(input: Record<string, unknown>) {
   const email = normalizeEmail(input.clientEmail)
   const data: ReviewRequestInput = {
-    clientName: str(input.clientName, 100),
+    clientName: line(input.clientName, 100),
     clientEmail: email || null,
     leadId: /^\d{1,18}$/.test(String(input.leadId ?? '')) ? String(input.leadId) : null,
     sendEmail: bool(input.sendEmail),

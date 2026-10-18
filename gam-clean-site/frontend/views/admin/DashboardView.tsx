@@ -110,7 +110,7 @@ export function DashboardView({ user, stats, recent, settings, claims, now, noti
           }
         >
           {recent.length > 0 ? (
-            <LeadsTable items={recent} now={now} />
+            <LeadsTable items={recent} now={now} compact />
           ) : (
             <EmptyState title="Aucune demande pour le moment">Les demandes envoyées depuis le site apparaîtront ici.</EmptyState>
           )}

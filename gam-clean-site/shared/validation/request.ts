@@ -4,7 +4,7 @@
 // toujours (seule source de vérité).
 // ============================================================================
 import { FREQUENCIES, OTHER_SERVICE, PROFILES, type Frequency, type Profile, type RequestType } from '../constants'
-import { isEmail, isOneOf, normalizeEmail, parseIntIn, str, toE164, type FieldErrors } from './common'
+import { isEmail, isOneOf, line, normalizeEmail, parseIntIn, str, toE164, type FieldErrors } from './common'
 
 export const REQUEST_LIMITS = {
   name: 100,
@@ -51,14 +51,14 @@ export function sanitizeRequest(input: Record<string, unknown>, allowedServiceSl
     services: [...new Set(raw.filter((s): s is string => typeof s === 'string' && allowed.has(s)))],
     frequency: isOneOf(FREQUENCIES, input.frequency) ? input.frequency : '',
     profile: isOneOf(PROFILES, input.profile) ? input.profile : '',
-    location: str(input.location, REQUEST_LIMITS.location),
-    surface: str(input.surface, REQUEST_LIMITS.surface),
+    location: line(input.location, REQUEST_LIMITS.location),
+    surface: line(input.surface, REQUEST_LIMITS.surface),
     message: str(input.message, REQUEST_LIMITS.message),
-    name: str(input.name, REQUEST_LIMITS.name),
-    company: str(input.company, REQUEST_LIMITS.company),
-    phone: str(input.phone, REQUEST_LIMITS.phone),
+    name: line(input.name, REQUEST_LIMITS.name),
+    company: line(input.company, REQUEST_LIMITS.company),
+    phone: line(input.phone, REQUEST_LIMITS.phone),
     email: normalizeEmail(input.email),
-    sourcePath: str(input.sourcePath, REQUEST_LIMITS.sourcePath),
+    sourcePath: line(input.sourcePath, REQUEST_LIMITS.sourcePath),
   }
 }
 

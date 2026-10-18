@@ -51,11 +51,9 @@ const nextConfig: NextConfig = {
   partialPrefetching: false,
   // Pilote PostgreSQL chargé tel quel par Node.js (pas d'empaquetage).
   serverExternalPackages: ['postgres'],
-  experimental: {
-    // CSS intégré au HTML : supprime les requêtes CSS bloquantes au premier affichage
-    // (la majorité des visiteurs d'un site vitrine arrivent pour la première fois).
-    inlineCss: true,
-  },
+  // CSS servi en fichiers (mis en cache d'une page à l'autre). Mesuré avec Lighthouse :
+  // l'intégrer au HTML (experimental.inlineCss) gagnait ~0,2 s au premier affichage
+  // mais doublait le poids de chaque page et triplait le temps de blocage.
   images: {
     formats: ['image/avif', 'image/webp'],
     qualities: [70, 80],

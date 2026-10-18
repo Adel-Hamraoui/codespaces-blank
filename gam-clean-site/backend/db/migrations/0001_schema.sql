@@ -12,6 +12,9 @@
 --   4. Index uniquement pour les requêtes réellement exécutées (voir
 --      docs/BASE-DE-DONNEES.md) : composites alignés sur le tri, partiels,
 --      trigrammes pour la recherche, BRIN pour le journal append-only.
+--      Index chronologiques en ordre CROISSANT : les nouvelles lignes arrivent
+--      en fin d'index (découpages de pages à 90/10, pages pleines) et
+--      PostgreSQL les lit à rebours pour les tris « plus récent d'abord ».
 --   5. fillfactor réduit sur les tables souvent mises à jour (mises à jour HOT).
 -- ============================================================================
 
@@ -43,8 +46,15 @@ create type gam.service_icon as enum (
 );
 
 -- ----------------------------------------------------------------------------
--- Fonction de normalisation pour la recherche (minuscules + sans accents).
--- Déclarée IMMUTABLE pour être utilisable dans une colonne générée indexée.
+-- Fonctions de recherche (minuscules + sans accents), évaluées pour chaque
+-- ligne examinée par une recherche : elles doivent être rapides.
+--   · IMMUTABLE, pour être utilisables dans un index sur expression.
+--   · Corps SQL standard (RETURN) : analysé et lié aux objets dès la création,
+--     donc insensible au search_path à l'exécution (même protection qu'un
+--     SET search_path) sans le coût d'un SET à chaque appel — mesuré sur
+--     100 000 lignes : 15 µs par ligne avec SET, 3 µs sans (voir
+--     docs/BASE-DE-DONNEES.md). lead_search_document devient en outre
+--     « inlinable » par le planificateur.
 -- Le schéma de l'extension unaccent est résolu dynamiquement (Supabase
 -- l'installe dans « extensions », une base locale peut l'avoir ailleurs).
 -- ----------------------------------------------------------------------------
@@ -56,16 +66,23 @@ begin
   from pg_extension e join pg_namespace n on n.oid = e.extnamespace
   where e.extname = 'unaccent';
 
-  execute
+  execute format(
     'create function gam.normalize_search(input text) returns text '
-    || 'language sql immutable strict parallel safe set search_path = '''' as '
-    || quote_literal(
-         'select lower(' || quote_ident(ext_schema) || '.unaccent('
-         || quote_literal(quote_ident(ext_schema) || '.unaccent') || '::regdictionary, input))'
-       );
+    || 'language sql immutable strict parallel safe '
+    || 'return pg_catalog.lower(%I.unaccent(%L::regdictionary, input))',
+    ext_schema, quote_ident(ext_schema) || '.unaccent');
 end
 $$;
 comment on function gam.normalize_search(text) is 'Minuscules et suppression des accents, pour la recherche par trigrammes.';
+
+-- Texte recherché dans une demande. Indexé par expression (index trigrammes) :
+-- rien n'est stocké en double dans la table.
+create function gam.lead_search_document(name text, email text, company text, location text, phone text)
+  returns text
+  language sql immutable parallel safe
+  return gam.normalize_search(
+    name || ' ' || email || coalesce(' ' || company, '') || coalesce(' ' || location, '') || coalesce(' ' || phone, ''));
+comment on function gam.lead_search_document(text, text, text, text, text) is 'Document de recherche d''une demande (nom, e-mail, société, ville, téléphone), normalisé.';
 
 -- ============================================================================
 -- COMPTES D'ADMINISTRATION
@@ -186,7 +203,7 @@ create table gam.services (
   groups            jsonb not null default '[]' check (jsonb_typeof(groups) = 'array' and jsonb_array_length(groups) <= 12)
 );
 create unique index services_slug_key on gam.services (slug);
-create index services_published_position_idx on gam.services (position, id) where is_published;
+-- Pas d'index d'ordre d'affichage : quelques lignes, lues en entier (plus rapide qu'un index à cette taille).
 comment on table gam.services is 'Prestations affichées sur le site. Listes ordonnées sans identité propre stockées en text[] / jsonb (pas de jointure à la lecture).';
 
 create table gam.service_relations (
@@ -209,7 +226,8 @@ create table gam.faq_items (
   question      text not null check (char_length(question) between 5 and 200),
   answer        text not null check (char_length(answer) between 5 and 1500)
 );
-create index faq_items_scope_position_idx on gam.faq_items (service_id, position, id) where is_published;
+-- Couvre la clé étrangère (suppression en cascade d'une prestation) et l'ordre d'affichage.
+create index faq_items_scope_position_idx on gam.faq_items (service_id, position, id);
 comment on table gam.faq_items is 'Questions fréquentes : service_id NULL = FAQ générale, sinon FAQ propre à une prestation.';
 
 create table gam.sectors (
@@ -262,31 +280,26 @@ create table gam.leads (
   location           text check (char_length(location) between 2 and 100),
   message            text check (char_length(message) <= 3000),
   source_path        text check (char_length(source_path) <= 200),
-  search_document    text generated always as (
-                       gam.normalize_search(
-                         name || ' ' || email
-                         || coalesce(' ' || company, '')
-                         || coalesce(' ' || location, '')
-                         || coalesce(' ' || phone_e164, ''))
-                     ) stored,
   constraint leads_quote_requires_location check (type <> 'quote' or location is not null),
   constraint leads_quote_requires_phone check (type <> 'quote' or phone_e164 is not null),
   constraint leads_contact_requires_message check (type <> 'contact' or coalesce(char_length(message), 0) >= 10)
 ) with (fillfactor = 90);
 
 -- Liste du back-office : filtre par statut + tri antéchronologique + pagination par curseur.
-create index leads_status_created_idx on gam.leads (status, created_at desc, id desc);
--- Liste « toutes les demandes » triée + pagination par curseur.
-create index leads_created_idx on gam.leads (created_at desc, id desc);
--- Recherche plein texte tolérante (nom, e-mail, société, ville, téléphone).
-create index leads_search_trgm_idx on gam.leads using gin (search_document gin_trgm_ops);
+-- Sert aussi le compteur « nouvelles demandes » par lecture de l'index seul.
+create index leads_status_created_idx on gam.leads (status, created_at, id);
+-- Liste « toutes les demandes » triée + pagination par curseur (lue à rebours).
+create index leads_created_idx on gam.leads (created_at, id);
+-- Recherche tolérante (nom, e-mail, société, ville, téléphone) : index trigrammes
+-- sur expression, sans colonne stockée en double.
+create index leads_search_trgm_idx on gam.leads
+  using gin (gam.lead_search_document(name, email, company, location, phone_e164) gin_trgm_ops);
 -- Demandes assignées à un membre de l'équipe.
-create index leads_assigned_to_idx on gam.leads (assigned_to, created_at desc) where assigned_to is not null;
+create index leads_assigned_to_idx on gam.leads (assigned_to, created_at) where assigned_to is not null;
 -- Relance des notifications e-mail en échec (index minuscule : ne contient que les demandes non notifiées).
 create index leads_pending_notification_idx on gam.leads (created_at) where notified_at is null;
 
 comment on table gam.leads is 'Demandes de devis et de contact reçues par le site. Conservées selon site_settings.lead_retention_months.';
-comment on column gam.leads.search_document is 'Colonne générée : texte normalisé (minuscules, sans accents) indexé par trigrammes.';
 comment on column gam.leads.notified_at is 'Date d''envoi de l''e-mail de notification. NULL = à renvoyer (tâche de maintenance).';
 
 create table gam.lead_services (
@@ -333,7 +346,7 @@ create table gam.review_requests (
 );
 create unique index review_requests_token_hash_key on gam.review_requests (token_hash);
 create index review_requests_lead_id_idx on gam.review_requests (lead_id) where lead_id is not null;
-create index review_requests_created_idx on gam.review_requests (created_at desc);
+create index review_requests_created_idx on gam.review_requests (created_at);
 comment on table gam.review_requests is 'Invitations à laisser un avis : lien personnel à usage unique (seule l''empreinte du jeton est stockée).';
 
 create table gam.reviews (
@@ -356,9 +369,9 @@ create table gam.reviews (
   constraint reviews_publish_requires_consent check (status <> 'published' or consent_publish)
 );
 create unique index reviews_request_id_key on gam.reviews (request_id) where request_id is not null;
-create index reviews_published_idx on gam.reviews (moderated_at desc, id desc) where status = 'published';
+create index reviews_published_idx on gam.reviews (moderated_at, id) where status = 'published';
 create index reviews_pending_idx on gam.reviews (created_at, id) where status = 'pending';
-create index reviews_created_idx on gam.reviews (created_at desc, id desc);
+create index reviews_created_idx on gam.reviews (created_at, id);
 comment on table gam.reviews is 'Avis clients. Le contenu est immuable (trigger) ; seule la modération change. Publication impossible sans consentement (contrainte).';
 
 -- ============================================================================
@@ -373,10 +386,11 @@ create table gam.audit_log (
   entity_id    text check (char_length(entity_id) <= 80),
   details      jsonb check (details is null or jsonb_typeof(details) = 'object')
 );
--- Journal en ajout seul : BRIN (quelques Ko) pour les filtres et la purge par date,
--- la clé primaire (croissante) sert l'affichage des dernières entrées.
+-- Journal en ajout seul : BRIN (quelques Ko) pour la purge par date, la clé
+-- primaire (croissante) sert l'affichage des dernières entrées. Pas d'index
+-- par auteur : aucune requête ne filtre le journal ainsi, et chaque index
+-- ralentirait toutes les écritures.
 create index audit_log_created_brin on gam.audit_log using brin (created_at);
-create index audit_log_actor_idx on gam.audit_log (actor_id, id desc) where actor_id is not null;
 comment on table gam.audit_log is 'Traçabilité des actions du back-office (qui a fait quoi, quand).';
 
 create unlogged table gam.rate_limits (

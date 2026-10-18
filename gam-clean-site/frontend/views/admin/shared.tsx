@@ -7,7 +7,8 @@ import { LEAD_TYPES, labelOf } from '@/shared/constants'
 import type { LeadListItem } from '@/shared/types/admin'
 import { formatPhone } from '@/shared/validation/common'
 
-export function LeadsTable({ items, now }: { items: LeadListItem[]; now: number }) {
+/** Tableau des demandes ; « compact » retire les colonnes Lieu et Suivi par (tableau de bord). */
+export function LeadsTable({ items, now, compact = false }: { items: LeadListItem[]; now: number; compact?: boolean }) {
   return (
     <div className={styles.tableWrap}>
       <table className={styles.table}>
@@ -16,9 +17,9 @@ export function LeadsTable({ items, now }: { items: LeadListItem[]; now: number 
             <th scope="col">Reçue</th>
             <th scope="col">Contact</th>
             <th scope="col">Demande</th>
-            <th scope="col">Lieu</th>
+            {!compact && <th scope="col">Lieu</th>}
             <th scope="col">Statut</th>
-            <th scope="col">Suivi par</th>
+            {!compact && <th scope="col">Suivi par</th>}
           </tr>
         </thead>
         <tbody>
@@ -38,7 +39,7 @@ export function LeadsTable({ items, now }: { items: LeadListItem[]; now: number 
                 {l.phone && <span className={styles.sub}>{formatPhone(l.phone)}</span>}
               </td>
               <td data-label="Demande">
-                {labelOf(LEAD_TYPES, l.type)}
+                <span>{labelOf(LEAD_TYPES, l.type)}</span>
                 {!l.notified && (
                   <MailWarning size={16} className={styles.warnIcon} aria-label="Notification e-mail non envoyée" />
                 )}
@@ -46,11 +47,13 @@ export function LeadsTable({ items, now }: { items: LeadListItem[]; now: number 
                   {[...l.serviceNames, ...(l.otherNeed ? ['Autre besoin'] : [])].join(', ') || '—'}
                 </span>
               </td>
-              <td data-label="Lieu">{l.location ?? '—'}</td>
+              {!compact && <td data-label="Lieu">{l.location ?? '—'}</td>}
               <td data-label="Statut">
                 <LeadStatusBadge status={l.status} />
               </td>
-              <td data-label="Suivi par">{l.assignedTo ?? <span className={styles.muted}>Personne</span>}</td>
+              {!compact && (
+                <td data-label="Suivi par">{l.assignedTo ?? <span className={styles.muted}>Personne</span>}</td>
+              )}
             </tr>
           ))}
         </tbody>

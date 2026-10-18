@@ -9,14 +9,16 @@ Les six photos proviennent des fichiers du site précédent (dossier `public/sta
 > - **Authenticité :** leur rendu laisse penser qu'il s'agit probablement d'images générées par IA ou de photos d'illustration, et non de photos des équipes GAM CLEAN. Elles ne doivent pas être présentées comme des réalisations de l'entreprise : le site ne le fait pas (aucune légende, alt descriptifs neutres).
 > - **Remplacement recommandé :** de vraies photos d'interventions GAM CLEAN, plus crédibles.
 
-| Fichier (`assets/images/`) | Ancien nom | Utilisé sur |
-|---|---|---|
-| `nettoyage-hall-vitres-bureaux.jpg` | `hero-1.jpg` | Accueil (hero), page Commerces et ERP |
-| `nettoyage-poste-de-travail.jpg` | `office-desk.jpg` | Carte et page Nettoyage de bureaux |
-| `nettoyage-industriel-haute-pression.jpg` | `hero-2.jpg` | Carte et page Nettoyage industriel |
-| `nettoyage-facade-vitree-hauteur.jpg` | `hero-3.jpg` | Carte et page Vitres et façades |
-| `nettoyage-fin-de-chantier.jpg` | `floor-cleaning.jpg` | Carte et page Fin de chantier |
-| `point-de-suivi-prestation.jpg` | `manager-quality.jpg` | Accueil (méthode), page L'entreprise |
+| Fichier (`frontend/assets/images/`) | Clé (back-office) | Ancien nom | Utilisé sur |
+|---|---|---|---|
+| `nettoyage-hall-vitres-bureaux.jpg` | `hall-vitres` | `hero-1.jpg` | Accueil (hero), carte et page Commerces et ERP |
+| `nettoyage-poste-de-travail.jpg` | `poste-de-travail` | `office-desk.jpg` | Carte et page Nettoyage de bureaux |
+| `nettoyage-industriel-haute-pression.jpg` | `industriel-haute-pression` | `hero-2.jpg` | Carte et page Nettoyage industriel |
+| `nettoyage-facade-vitree-hauteur.jpg` | `facade-vitree` | `hero-3.jpg` | Carte et page Vitres et façades |
+| `nettoyage-fin-de-chantier.jpg` | `fin-de-chantier` | `floor-cleaning.jpg` | Carte et page Fin de chantier |
+| `point-de-suivi-prestation.jpg` | `point-de-suivi` | `manager-quality.jpg` | Accueil (méthode), page L'entreprise |
+
+La photo de chaque prestation se choisit dans **Back-office → Contenu du site → Prestations** (champ « Photo », parmi les clés ci-dessus), avec sa description (texte alternatif). Les photos de l'accueil et de la page L'entreprise sont fixées dans le code (`frontend/components/sections/HomeHero.tsx`, `frontend/views/site/HomeView.tsx`, `frontend/views/site/AboutView.tsx`).
 
 Aucune nouvelle photo de banque d'images n'a été ajoutée : l'environnement de développement n'avait pas accès aux banques d'images (Unsplash, Pexels…). Plutôt que d'insérer des images dont la licence n'aurait pas pu être vérifiée, les emplacements sans photo affichent un panneau graphique.
 
@@ -26,9 +28,9 @@ Si vous utilisez une banque d'images, notez ici, pour chaque photo, l'URL source
 
 | Fichier | Origine |
 |---|---|
-| `assets/brand/logo-source-fourni.webp` | Logo fourni par GAM CLEAN (1024 × 1024, fond bleu nuit) |
-| `assets/brand/logo-light.png` | Monogramme détouré depuis le logo fourni + mot « GAM CLEAN » issu du même fichier. Les étoiles blanches ont été redessinées en bleu pour rester visibles sur fond blanc. |
-| `assets/brand/logo-dark.png` | Même détourage, avec les étoiles d'origine, pour les fonds sombres |
+| `frontend/assets/brand/logo-source-fourni.webp` | Logo fourni par GAM CLEAN (1024 × 1024, fond bleu nuit) |
+| `frontend/assets/brand/logo-light.png` | Monogramme détouré depuis le logo fourni + mot « GAM CLEAN » issu du même fichier. Les étoiles blanches ont été redessinées en bleu pour rester visibles sur fond blanc. |
+| `frontend/assets/brand/logo-dark.png` | Même détourage, avec les étoiles d'origine, pour les fonds sombres |
 | `app/icon.png`, `app/apple-icon.png`, `app/favicon.ico`, `public/brand/icon-*.png` | Monogramme sur carré bleu nuit |
 | `app/opengraph-image.jpg` | Image de partage sur les réseaux sociaux (1200 × 630) |
 
@@ -50,4 +52,4 @@ Format conseillé : paysage 4:3 ou 16:10, au moins 1 600 px de large, lumière n
 | Prestations spécialisées *(aucune photo actuellement)* | Une photo par spécialité réellement pratiquée (salle technique, bassin, voirie…) |
 | L'entreprise | Le dirigeant ou l'équipe GAM CLEAN, en situation réelle |
 
-Remplacement : voir la section 4 du README.
+Remplacement et ajout d'une photo : voir la section 6 du README.

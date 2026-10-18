@@ -11,12 +11,13 @@
     "db:migrate": "tsx --conditions=react-server scripts/db-migrate.ts",
     "db:seed": "tsx --conditions=react-server scripts/db-seed.ts",
     "admin:create": "tsx --conditions=react-server scripts/admin-create.ts",
-    "test": "tsx --conditions=react-server --test \"tests/unit/**/*.test.ts\"",
-    "test:db": "tsx --conditions=react-server --test --test-concurrency=1 \"tests/db/**/*.test.ts\"",
+    "test": "tsx --conditions=react-server --test --test-reporter=spec \"tests/unit/**/*.test.ts\"",
+    "test:db": "tsx --conditions=react-server --test --test-reporter=spec --test-concurrency=1 \"tests/db/**/*.test.ts\"",
     "check:architecture": "node scripts/check-architecture.mjs",
-    "check:content": "node scripts/check-content.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
     "e2e:prepare": "tsx --conditions=react-server scripts/e2e-prepare.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:benchmark": "tsx --conditions=react-server scripts/db-benchmark.ts"
   },
   "dependencies": {
     "lucide-react": "^1.57.0",

@@ -14,7 +14,8 @@ test('aucun défilement horizontal sur les pages principales', async ({ page }) 
 })
 
 test('menu mobile : ouverture, Échap, retour du focus', async ({ page }) => {
-  await page.goto('/')
+  // Page prête (scripts chargés et interface activée) avant d'utiliser le menu.
+  await page.goto('/', { waitUntil: 'networkidle' })
   const toggle = page.getByRole('button', { name: 'Ouvrir le menu' })
   await toggle.click()
   const panel = page.getByRole('navigation', { name: 'Navigation mobile' })

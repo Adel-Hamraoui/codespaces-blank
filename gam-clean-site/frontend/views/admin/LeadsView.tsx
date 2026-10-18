@@ -21,7 +21,8 @@ type Props = {
 export function LeadsView({ page, filters, cursor, counts, services, assignees, now, notice }: Props) {
   const total = Object.values(counts).reduce((a, b) => a + b, 0)
   const tabs = [{ value: undefined, label: 'Toutes', count: total }, ...LEAD_STATUSES.map((s) => ({ value: s.value, label: s.label, count: counts[s.value] }))]
-  const hasFilters = Boolean(filters.type || filters.serviceId || filters.assignedToId || filters.q || filters.from || filters.to)
+  const secondary = [filters.type, filters.serviceId, filters.assignedToId, filters.from, filters.to].filter(Boolean).length
+  const hasFilters = secondary > 0 || Boolean(filters.q)
 
   return (
     <>
@@ -58,66 +59,15 @@ export function LeadsView({ page, filters, cursor, counts, services, assignees, 
       </nav>
 
       <Panel>
-        <form method="get" action="/admin/demandes" className={`${styles.form} ${styles.filters}`} role="search">
+        <form method="get" action="/admin/demandes" role="search">
           {filters.status && <input type="hidden" name="statut" value={filters.status} />}
-          <div className={`${styles.field} ${styles.wide}`}>
-            <label htmlFor="f-q" className={styles.label}>
-              Rechercher
-            </label>
-            <input id="f-q" type="search" name="q" defaultValue={filters.q ?? ''} placeholder="Nom, e-mail, société, ville, téléphone…" />
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="f-type" className={styles.label}>
-              Type
-            </label>
-            <select id="f-type" name="type" defaultValue={filters.type ?? ''}>
-              <option value="">Tous</option>
-              {LEAD_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="f-service" className={styles.label}>
-              Prestation
-            </label>
-            <select id="f-service" name="prestation" defaultValue={filters.serviceId ?? ''}>
-              <option value="">Toutes</option>
-              {services.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="f-assignee" className={styles.label}>
-              Suivi par
-            </label>
-            <select id="f-assignee" name="assigne" defaultValue={filters.assignedToId ?? ''}>
-              <option value="">Tout le monde</option>
-              {assignees.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="f-from" className={styles.label}>
-              Du
-            </label>
-            <input id="f-from" type="date" name="du" defaultValue={filters.from ?? ''} />
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="f-to" className={styles.label}>
-              Au
-            </label>
-            <input id="f-to" type="date" name="au" defaultValue={filters.to ?? ''} />
-          </div>
-          <div className={styles.actions}>
+          <div className={`${styles.form} ${styles.searchRow}`}>
+            <div className={styles.field}>
+              <label htmlFor="f-q" className={styles.label}>
+                Rechercher
+              </label>
+              <input id="f-q" type="search" name="q" defaultValue={filters.q ?? ''} placeholder="Nom, e-mail, société, ville, téléphone…" />
+            </div>
             <button type="submit" className={styles.btn}>
               <Search size={16} aria-hidden="true" /> Filtrer
             </button>
@@ -127,6 +77,65 @@ export function LeadsView({ page, filters, cursor, counts, services, assignees, 
               </Link>
             )}
           </div>
+          {/* Filtres secondaires repliés (ouverts dès que l'un d'eux est actif). */}
+          <details className={styles.moreFilters} open={secondary > 0 || undefined}>
+            <summary>
+              Plus de filtres{secondary > 0 && <span className={styles.activeCount}>{secondary}</span>}
+            </summary>
+            <div className={`${styles.form} ${styles.filters}`}>
+              <div className={styles.field}>
+                <label htmlFor="f-type" className={styles.label}>
+                  Type
+                </label>
+                <select id="f-type" name="type" defaultValue={filters.type ?? ''}>
+                  <option value="">Tous</option>
+                  {LEAD_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="f-service" className={styles.label}>
+                  Prestation
+                </label>
+                <select id="f-service" name="prestation" defaultValue={filters.serviceId ?? ''}>
+                  <option value="">Toutes</option>
+                  {services.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="f-assignee" className={styles.label}>
+                  Suivi par
+                </label>
+                <select id="f-assignee" name="assigne" defaultValue={filters.assignedToId ?? ''}>
+                  <option value="">Tout le monde</option>
+                  {assignees.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="f-from" className={styles.label}>
+                  Du
+                </label>
+                <input id="f-from" type="date" name="du" defaultValue={filters.from ?? ''} />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="f-to" className={styles.label}>
+                  Au
+                </label>
+                <input id="f-to" type="date" name="au" defaultValue={filters.to ?? ''} />
+              </div>
+            </div>
+          </details>
         </form>
 
         {page.items.length > 0 ? (

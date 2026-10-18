@@ -17,6 +17,8 @@
   .shell {
     display: grid;
     grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    /* La colonne de navigation reste bleu nuit sur toute la hauteur des pages longues. */
+    background: linear-gradient(to right, var(--navy-900) var(--sidebar-w), var(--admin-bg) var(--sidebar-w));
   }
 }
 
@@ -77,6 +79,7 @@
 }
 
 .brandTag {
+  white-space: nowrap;
   padding: 0.1rem 0.45rem;
   border-radius: 6px;
   background: rgb(110 231 183 / 0.14);
@@ -816,21 +819,29 @@ a.stat:hover {
     border-bottom: 1px solid var(--line);
   }
 
+  /* Libellé à gauche (sur toute la hauteur de la cellule), contenu à droite. */
   .table td {
     display: grid;
     grid-template-columns: 7.5rem minmax(0, 1fr);
-    gap: var(--sp-3);
+    grid-auto-flow: row;
+    column-gap: var(--sp-3);
     padding: 0.25rem 0;
     border: 0;
   }
 
   .table td::before {
     content: attr(data-label);
+    grid-column: 1;
+    grid-row: 1 / span 8;
     color: var(--muted);
     font-size: var(--fs-xs);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+  }
+
+  .table td > * {
+    grid-column: 2;
   }
 
   .table td[data-label=''] {
@@ -884,6 +895,63 @@ a.stat:hover {
 }
 
 /* ---------- Filtres ---------- */
+.searchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: flex-end;
+  margin-bottom: var(--sp-3);
+}
+
+.searchRow .field {
+  flex: 1 1 260px;
+}
+
+.moreFilters {
+  margin-bottom: var(--sp-4);
+}
+
+.moreFilters > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 36px;
+  font-weight: 700;
+  color: var(--navy-900);
+  cursor: pointer;
+}
+
+.moreFilters > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Chevron indiquant l'état replié / déplié */
+.moreFilters > summary::before {
+  content: '';
+  width: 0.5em;
+  height: 0.5em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--dur) var(--ease);
+}
+
+.moreFilters[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.moreFilters[open] > summary {
+  margin-bottom: var(--sp-3);
+}
+
+.activeCount {
+  padding: 0 0.45rem;
+  border-radius: var(--r-pill);
+  background: var(--green-700);
+  color: #fff;
+  font-size: var(--fs-xs);
+}
+
 .filters {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));

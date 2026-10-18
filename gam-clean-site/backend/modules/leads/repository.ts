@@ -44,7 +44,9 @@ function whereClause(sql: Sql, f: LeadFilters): Fragment {
     conds.push(sql`exists (select 1 from gam.lead_services s where s.lead_id = l.id and s.service_id = ${f.serviceId})`)
   }
   if (f.q && f.q.trim().length >= 2) {
-    conds.push(sql`l.search_document like '%' || gam.normalize_search(${escapeLike(f.q.trim().slice(0, 80))}) || '%'`)
+    // Même expression que l'index leads_search_trgm_idx (sinon l'index ne serait pas utilisé).
+    conds.push(sql`gam.lead_search_document(l.name, l.email, l.company, l.location, l.phone_e164)
+      like '%' || gam.normalize_search(${escapeLike(f.q.trim().slice(0, 80))}) || '%'`)
   }
   if (f.from) conds.push(sql`l.created_at >= (${f.from}::date::timestamp at time zone 'Europe/Paris')`)
   if (f.to) conds.push(sql`l.created_at < ((${f.to}::date + 1)::timestamp at time zone 'Europe/Paris')`)
@@ -104,31 +106,51 @@ export async function countByStatus(sql: Sql): Promise<Record<LeadStatus, number
   return out
 }
 
+/** Nombre de demandes « nouvelles » (badge du menu, sur chaque page du back-office) :
+ *  lecture de l'index (status, created_at, id) seul, sans toucher à la table. */
+export async function countNewLeads(sql: Sql): Promise<number> {
+  const [r] = await sql<{ n: number }[]>`select count(*)::int as n from gam.leads where status = 'new'`
+  return r.n
+}
+
+/**
+ * Indicateurs du tableau de bord en UN SEUL passage sur la table des demandes
+ * (agrégats filtrés) : la répartition par statut impose de toute façon de lire
+ * chaque ligne, les autres compteurs s'y ajoutent sans lecture supplémentaire.
+ */
 export async function dashboardStats(sql: Sql): Promise<DashboardStats> {
   const [r] = await sql<{
-    by_status: Partial<Record<LeadStatus, number>>
+    new: number
+    in_progress: number
+    quote_sent: number
+    won: number
+    lost: number
+    spam: number
     last30: number
     prev30: number
     won90: number
     closed90: number
+    unnotified: number
     pending_reviews: number
     published_reviews: number
-    unnotified: number
   }[]>`
     select
-      (select coalesce(jsonb_object_agg(status, n), '{}'::jsonb)
-         from (select status, count(*)::int as n from gam.leads group by status) t) as by_status,
-      (select count(*)::int from gam.leads where created_at >= now() - interval '30 days') as last30,
-      (select count(*)::int from gam.leads
-        where created_at >= now() - interval '60 days' and created_at < now() - interval '30 days') as prev30,
-      (select count(*)::int from gam.leads where status = 'won' and status_changed_at >= now() - interval '90 days') as won90,
-      (select count(*)::int from gam.leads
-        where status in ('won', 'lost') and status_changed_at >= now() - interval '90 days') as closed90,
+      count(*) filter (where status = 'new')::int as new,
+      count(*) filter (where status = 'in_progress')::int as in_progress,
+      count(*) filter (where status = 'quote_sent')::int as quote_sent,
+      count(*) filter (where status = 'won')::int as won,
+      count(*) filter (where status = 'lost')::int as lost,
+      count(*) filter (where status = 'spam')::int as spam,
+      count(*) filter (where created_at >= now() - interval '30 days')::int as last30,
+      count(*) filter (where created_at >= now() - interval '60 days' and created_at < now() - interval '30 days')::int as prev30,
+      count(*) filter (where status = 'won' and status_changed_at >= now() - interval '90 days')::int as won90,
+      count(*) filter (where status in ('won', 'lost') and status_changed_at >= now() - interval '90 days')::int as closed90,
+      count(*) filter (where notified_at is null)::int as unnotified,
       (select count(*)::int from gam.reviews where status = 'pending') as pending_reviews,
-      (select count(*)::int from gam.reviews where status = 'published') as published_reviews,
-      (select count(*)::int from gam.leads where notified_at is null) as unnotified`
+      (select count(*)::int from gam.reviews where status = 'published') as published_reviews
+    from gam.leads`
   return {
-    byStatus: { new: 0, in_progress: 0, quote_sent: 0, won: 0, lost: 0, spam: 0, ...r.by_status },
+    byStatus: { new: r.new, in_progress: r.in_progress, quote_sent: r.quote_sent, won: r.won, lost: r.lost, spam: r.spam },
     last30Days: r.last30,
     previous30Days: r.prev30,
     won90Days: r.won90,

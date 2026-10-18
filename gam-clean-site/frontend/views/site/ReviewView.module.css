@@ -1,0 +1,38 @@
+.card {
+  max-width: 760px;
+  margin-inline: auto;
+  padding: clamp(1.25rem, 0.8rem + 2vw, 2.5rem);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: #fff;
+  box-shadow: var(--sh-2);
+}
+
+.intro {
+  margin-bottom: var(--sp-5);
+  font-size: var(--fs-lg);
+  color: var(--ink);
+}
+
+.warn {
+  display: inline-grid;
+  color: #b54708;
+  margin-bottom: var(--sp-3);
+}
+
+.skeleton {
+  min-height: 520px;
+  background: linear-gradient(90deg, var(--mist) 0%, #fff 50%, var(--mist) 100%) 0 0 / 200% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton {
+    animation: shimmer 1.4s linear infinite;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}

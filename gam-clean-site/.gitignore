@@ -18,3 +18,8 @@ next-env.d.ts
 # divers
 .DS_Store
 npm-debug.log*
+
+# Tests
+/test-results/
+/playwright-report/
+/tests/e2e/.auth/

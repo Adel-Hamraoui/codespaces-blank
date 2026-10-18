@@ -42,6 +42,15 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  // Pages publiques statiques (contenus mis en cache avec « use cache » et
+  // invalidés depuis le back-office), back-office rendu à la demande.
+  cacheComponents: true,
+  // Préchargement complet des pages (toutes statiques côté public). Le mode
+  // « partiel » servirait d'abord une coque générique aux adresses inconnues :
+  // une prestation inexistante répondrait 200 au lieu d'une vraie erreur 404.
+  partialPrefetching: false,
+  // Pilote PostgreSQL chargé tel quel par Node.js (pas d'empaquetage).
+  serverExternalPackages: ['postgres'],
   experimental: {
     // CSS intégré au HTML : supprime les requêtes CSS bloquantes au premier affichage
     // (la majorité des visiteurs d'un site vitrine arrivent pour la première fois).
@@ -59,6 +68,21 @@ const nextConfig: NextConfig = {
         // Les réponses de l'API ne doivent jamais être mises en cache.
         source: '/api/:path*',
         headers: [{ key: 'Cache-Control', value: 'no-store' }],
+      },
+      {
+        // Back-office : jamais indexé, jamais transmis en référent.
+        source: '/admin/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+        ],
+      },
+      {
+        source: '/avis/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+        ],
       },
     ]
   },

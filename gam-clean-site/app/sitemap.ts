@@ -1,12 +1,13 @@
 import type { MetadataRoute } from 'next'
-import { services } from '@/content/services'
-import { absoluteUrl } from '@/lib/seo'
+import { getPublishedServiceSlugs } from '@/backend/modules/content/public'
+import { absoluteUrl } from '@/shared/config/site-url'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const slugs = await getPublishedServiceSlugs()
   const paths = [
     '/',
     '/prestations',
-    ...services.map((s) => `/prestations/${s.slug}`),
+    ...slugs.map((slug) => `/prestations/${slug}`),
     '/secteurs',
     '/a-propos',
     '/devis',

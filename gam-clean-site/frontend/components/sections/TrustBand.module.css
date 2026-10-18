@@ -1,0 +1,83 @@
+.band {
+  position: relative;
+  border-block: 1px solid var(--line);
+  background: #fff;
+}
+
+/* Filet aux couleurs du logo, très fin */
+.band::before {
+  content: '';
+  position: absolute;
+  inset: -1px 0 auto;
+  height: 3px;
+  background: var(--brand-gradient);
+}
+
+.inner {
+  padding-block: var(--sp-5);
+}
+
+.list {
+  list-style: none;
+  display: grid;
+  gap: var(--sp-4) var(--sp-6);
+}
+
+@media (min-width: 640px) {
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.figure {
+  flex-shrink: 0;
+  min-width: 2ch;
+  font-family: var(--font-heading);
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--navy-900);
+}
+
+.siret {
+  flex-shrink: 0;
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--r-sm);
+  background: var(--mint-50);
+  color: var(--green-700);
+  font-family: var(--font-heading);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.text {
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.text strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.text a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+}

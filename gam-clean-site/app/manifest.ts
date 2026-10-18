@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next'
-import { company } from '@/content/site'
+import { getSiteChrome } from '@/backend/modules/content/public'
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const { settings } = await getSiteChrome()
   return {
-    name: `${company.name} — Nettoyage professionnel`,
-    short_name: company.name,
+    name: `${settings.companyName} — Nettoyage professionnel`,
+    short_name: settings.companyName,
     start_url: '/',
     display: 'browser',
     background_color: '#ffffff',

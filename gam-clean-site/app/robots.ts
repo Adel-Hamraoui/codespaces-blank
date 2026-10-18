@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { absoluteUrl, isIndexable } from '@/lib/seo'
+import { absoluteUrl, isIndexable } from '@/shared/config/site-url'
 
 export default function robots(): MetadataRoute.Robots {
   // Les déploiements de prévisualisation Vercel ne doivent pas être indexés.
@@ -7,7 +7,8 @@ export default function robots(): MetadataRoute.Robots {
     return { rules: { userAgent: '*', disallow: '/' } }
   }
   return {
-    rules: { userAgent: '*', allow: '/', disallow: ['/api/'] },
+    // Back-office, API et liens personnels d'avis : jamais explorés.
+    rules: { userAgent: '*', allow: '/', disallow: ['/api/', '/admin', '/avis/'] },
     sitemap: absoluteUrl('/sitemap.xml'),
   }
 }

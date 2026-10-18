@@ -86,7 +86,7 @@ Autres commandes :
 | Commande | Rôle |
 |---|---|
 | `npm run build` puis `npm run start` | Compilation et serveur de production |
-| `npm run typecheck` | Vérification TypeScript |
+| `npm run typecheck` | Vérification TypeScript (génère d'abord les types de Next.js, nécessaires sur une copie neuve) |
 | `npm run check:architecture` | Contrôle de la séparation frontend / backend / shared |
 | `npm run check:secrets` | Après `npm run build`, avec les mêmes variables : vérifie qu'aucun secret n'apparaît dans ce que reçoit le navigateur |
 | `npm test` | Tests unitaires |

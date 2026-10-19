@@ -113,6 +113,14 @@ export async function countNewLeads(sql: Sql): Promise<number> {
   return r.n
 }
 
+/** Compteurs du menu du back-office en une seule requête (lecture des index partiels seuls). */
+export async function countMenuBadges(sql: Sql): Promise<{ newLeads: number; pendingReviews: number }> {
+  const [r] = await sql<{ newLeads: number; pendingReviews: number }[]>`
+    select (select count(*)::int from gam.leads where status = 'new') as "newLeads",
+           (select count(*)::int from gam.reviews where status = 'pending') as "pendingReviews"`
+  return r
+}
+
 /**
  * Indicateurs du tableau de bord en UN SEUL passage sur la table des demandes
  * (agrégats filtrés) : la répartition par statut impose de toute façon de lire

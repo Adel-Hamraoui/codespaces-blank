@@ -315,6 +315,8 @@ Configurées en 308 (permanentes) dans `next.config.ts` :
 
 ### Dépannage du back-office en développement
 
+**Toutes les pages restent sur « Chargement de la page… », même après une nouvelle connexion.** C'est le symptôme d'une connexion à la base coupée silencieusement (réseau, pooler) : elle ne répond plus mais n'est pas fermée, et les requêtes suivantes s'y empilent. Désormais, toute requête qui dépasse 12 secondes échoue avec une erreur explicite dans le terminal (`[base] La base de données n'a pas répondu dans le délai…`), le pool de connexions est remplacé et la page affiche « Page indisponible » avec un bouton « Réessayer ». Si ce message revient souvent, la liaison avec la base est instable : vérifiez le réseau, ou utilisez le *Session pooler* ou une base locale en développement.
+
 **L'écran reste en chargement après un clic ou un enregistrement, et un rechargement complet (F5) répare.** Vérifiez d'abord le cookie `next-instant-navigation-testing`. Le *Navigation Inspector* des Next.js DevTools le pose pour mettre les navigations en pause (option *Pause on navigations*). Tant qu'il existe, Next.js retient les changements de page en développement. Ce cookie est lié à `localhost` et non au port : un autre projet Next.js ouvert en local peut le laisser derrière lui.
 
 - Le back-office affiche alors un bandeau rouge, en développement uniquement, avec un bouton « Désactiver et recharger ».

@@ -94,7 +94,8 @@ Action (formulaire) → backend/actions/….ts ('use server')
 - **Droits** : une seule matrice (`shared/auth/permissions.ts`), utilisée par le serveur pour autoriser et par l'interface pour masquer ce qui n'est pas permis.
 - **Formulaires** (`frontend/lib/use-form-action.ts`) : la saisie est conservée en cas d'erreur de validation (React 19 vide sinon le formulaire après chaque envoi). Au-delà de 15 secondes d'attente, un message propose de recharger la page au lieu de laisser un indicateur tourner sans fin.
 - **Changements de page** : `app/admin/(espace)/loading.tsx` affiche immédiatement un état de chargement pendant que le serveur répond. Les layouts et pages du back-office déclarent `export const instant = false` : ils vérifient la session avant tout affichage, une attente que la validation « Instant » de Next.js signalerait sinon en développement.
-- **Requêtes** : le layout lance la vérification de session et les compteurs du menu en parallèle ; les pages ne lisent leurs données qu'après la vérification de session et des droits.
+- **Requêtes** : le layout lance la vérification de session et les compteurs du menu (une seule requête) en parallèle ; les pages ne lisent leurs données qu'après la vérification de session et des droits.
+- **Base qui ne répond plus** (`backend/db/client.ts`) : chaque requête du site est limitée à 12 s (20 s par transaction), file d'attente et connexion comprises. Au dépassement, une `DatabaseTimeoutError` est levée et journalisée, et le pool est remplacé (l'ancien termine ses requêtes saines puis se ferme). Les pages affichent alors `app/admin/(espace)/error.tsx` (« Page indisponible », bouton « Réessayer ») ; `app/admin/error.tsx` couvre la connexion et le menu.
 
 ### 4. Avis clients
 

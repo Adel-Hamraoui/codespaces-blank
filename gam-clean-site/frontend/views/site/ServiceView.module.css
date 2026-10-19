@@ -1,0 +1,146 @@
+.photo {
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-3);
+  background: var(--mist-2);
+}
+
+.photoImg {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.split {
+  display: grid;
+  gap: var(--sp-7);
+}
+
+@media (min-width: 1024px) {
+  .split {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr);
+    gap: var(--sp-8);
+    align-items: start;
+  }
+}
+
+.split :global(.check-list) {
+  font-size: var(--fs-lg);
+  color: var(--ink);
+}
+
+.note {
+  margin-top: var(--sp-5);
+  font-size: var(--fs-sm);
+}
+
+.forWhom {
+  display: grid;
+  gap: var(--sp-5);
+  padding: var(--sp-6);
+  border-radius: var(--r-lg);
+  background: var(--mist);
+  border: 1px solid var(--line);
+}
+
+.forWhomTitle {
+  margin: 0;
+  font-size: var(--fs-xl);
+}
+
+.groups {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+@media (min-width: 900px) {
+  .groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.group {
+  scroll-margin-top: calc(var(--header-h) + 24px);
+}
+
+.faqGrid {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+@media (min-width: 1024px) {
+  .faqGrid {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--sp-8);
+    align-items: start;
+  }
+}
+
+.relatedTitle {
+  font-size: var(--fs-xl);
+  margin-bottom: var(--sp-5);
+}
+
+.related {
+  list-style: none;
+  display: grid;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 900px) {
+  .related {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.relatedLink {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: var(--sp-4);
+  height: 100%;
+  padding: var(--sp-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+
+.relatedLink:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--sh-2);
+  text-decoration: none;
+}
+
+.relatedIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--mint-50);
+  color: var(--green-700);
+}
+
+.relatedName {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.relatedText {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+@media (min-width: 900px) {
+  /* Nombre impair de spécialités : la dernière carte occupe toute la largeur. */
+  .group:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}

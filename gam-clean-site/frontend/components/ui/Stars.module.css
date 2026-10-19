@@ -1,0 +1,13 @@
+.stars {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.on {
+  color: #b45309; /* ambre foncé : 4,9:1 sur blanc */
+  fill: #f59e0b;
+}
+
+.off {
+  color: var(--line-strong);
+}

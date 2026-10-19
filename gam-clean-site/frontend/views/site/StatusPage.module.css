@@ -1,0 +1,37 @@
+.wrap {
+  min-height: 60vh;
+  display: grid;
+  align-items: center;
+}
+
+.iconOk,
+.iconWarn {
+  display: inline-grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  margin-bottom: var(--sp-5);
+  border-radius: 50%;
+}
+
+.iconOk {
+  background: var(--mint-50);
+  color: var(--green-700);
+}
+
+.iconWarn {
+  background: #fffaeb;
+  color: #b54708;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-6);
+}
+
+.back {
+  margin-top: var(--sp-6);
+}

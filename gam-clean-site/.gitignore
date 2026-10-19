@@ -1,0 +1,24 @@
+# dépendances
+node_modules/
+
+# build Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# environnement (ne jamais commiter de secrets) : tous les fichiers .env sauf le modèle
+.env*
+!.env.example
+
+# Vercel
+.vercel
+
+# divers
+.DS_Store
+npm-debug.log*
+
+# Tests
+/test-results/
+/playwright-report/
+/tests/e2e/.auth/

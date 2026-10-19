@@ -1,0 +1,104 @@
+.layout {
+  display: grid;
+  gap: var(--sp-7);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: var(--sp-7);
+  }
+}
+
+.formCard {
+  padding: clamp(1.25rem, 0.8rem + 2vw, 2.5rem);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--sh-2);
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+.aside {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+@media (min-width: 1024px) {
+  .aside {
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+  }
+}
+
+.asideTitle {
+  font-size: var(--fs-xl);
+  margin-bottom: 0;
+}
+
+.steps {
+  list-style: none;
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: start;
+}
+
+.stepIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--mint-50);
+  color: var(--green-700);
+}
+
+.stepTitle {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.stepText {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.call {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  border-radius: var(--r-md);
+  background: var(--navy-900);
+  color: var(--on-dark-muted);
+}
+
+.callTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: #fff;
+}
+
+.call :global(.btn) {
+  color: var(--navy-950);
+}
+
+.mail {
+  justify-self: center;
+  font-size: var(--fs-sm);
+  color: var(--on-dark-muted);
+  overflow-wrap: anywhere;
+}
+
+.mail:hover {
+  color: #fff;
+}

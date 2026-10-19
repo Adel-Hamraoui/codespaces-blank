@@ -1,0 +1,33 @@
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  gap: var(--sp-2);
+  padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+  background: rgb(255 255 255 / 0.97);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 24px -16px rgb(6 23 46 / 0.35);
+}
+
+.action {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 50px;
+  padding-inline: 0.75rem;
+  font-size: 0.98rem;
+}
+
+@media (min-width: 1024px) {
+  .bar {
+    display: none;
+  }
+}
+
+/* Le menu mobile ouvert masque la barre (ses actions y sont déjà présentes). */
+:global(header[data-menu-open]) ~ .bar,
+:global(body:has(header[data-menu-open])) .bar {
+  display: none;
+}

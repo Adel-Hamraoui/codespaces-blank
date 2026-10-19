@@ -101,69 +101,134 @@ export class DatabaseTimeoutError extends Error {
 // suivantes, qui attendent indéfiniment : tout le back-office se bloque. Ici,
 // une requête qui dépasse QUERY_TIMEOUT_MS échoue avec une erreur explicite et
 // le pool est remplacé ; l'ancien termine ses requêtes saines puis est fermé.
+//
+// Avec le Transaction pooler, une requête par connexion à la fois. Par défaut,
+// postgres.js envoie une requête sans paramètre sur une connexion déjà occupée,
+// sans attendre la réponse précédente (pipeline). Constaté avec ce pooler : des
+// requêtes sans paramètre lancées en parallèle par une même page restaient sans
+// réponse jusqu'au délai. L'option max_pipeline ne convient pas (à 0, sql.begin
+// échoue) : une file d'attente limite donc les requêtes et transactions en cours
+// au nombre de connexions du pool, et postgres.js trouve toujours une connexion libre.
 // ---------------------------------------------------------------------------
-type PoolState = { sql: Sql; generation: number }
+
+/** Place réservée dans la file : `done()` la libère, `done(true)` la laisse occupée (connexion bloquée). */
+type Done = (hung?: boolean) => void
+
+export type Gate = {
+  /** Lance `start` dès qu'une place est libre. */
+  enter(start: () => void): Done
+  /** Appelle `onIdle` quand plus rien n'attend ni ne s'exécute (hors connexions bloquées). */
+  whenIdle(onIdle: () => void): void
+}
+
+export function createGate(size: number): Gate {
+  const waiting: Array<() => void> = []
+  let running = 0
+  let hung = 0
+  let idle: (() => void) | null = null
+  const pump = () => {
+    while (running < size && waiting.length) waiting.shift()!()
+    if (idle && !waiting.length && running === hung) {
+      idle()
+      idle = null
+    }
+  }
+  return {
+    enter(start) {
+      let state: 'waiting' | 'running' | 'done' = 'waiting'
+      const go = () => {
+        state = 'running'
+        running++
+        start()
+      }
+      waiting.push(go)
+      pump()
+      return (isHung = false) => {
+        if (state === 'waiting') waiting.splice(waiting.indexOf(go), 1)
+        else if (state === 'running') isHung ? hung++ : running--
+        state = 'done'
+        pump()
+      }
+    },
+    whenIdle(onIdle) {
+      idle = onIdle
+      pump()
+    },
+  }
+}
+
+type Pool = { sql: Sql; gate: Gate | null }
+type PoolState = { pool: Pool }
 
 declare global {
-  var __gamPool: PoolState | undefined
-  var __gamSql: Sql | undefined
+  var __gamDb: PoolState | undefined
+  var __gamDbSql: Sql | undefined
+}
+
+function createPool(url: string): Pool {
+  const max = config.dbPoolMax
+  return { sql: createSql(url, max, { serverTimeouts: true }), gate: isTransactionPooler(url) ? createGate(max) : null }
 }
 
 const shortSql = (strings: readonly string[]) => strings.join('?').replace(/\s+/g, ' ').trim().slice(0, 90)
 
-function replacePool(state: PoolState, generation: number, url: string, reason: string) {
-  if (state.generation !== generation) return // déjà remplacé
-  const old = state.sql
-  state.sql = createSql(url, config.dbPoolMax, { serverTimeouts: true })
-  state.generation += 1
-  console.error(`[base] ${reason} — pool de connexions remplacé.`)
-  old.end({ timeout: 5 }).catch(() => {})
+function replacePool(state: PoolState, old: Pool, url: string, reason: string) {
+  if (state.pool !== old) return // déjà remplacé
+  state.pool = createPool(url)
+  // Avertissement : l'erreur elle-même est levée à l'appelant (page d'erreur du back-office).
+  console.warn(`[base] ${reason} — pool de connexions remplacé.`)
+  const end = () => void old.sql.end({ timeout: 5 }).catch(() => {})
+  if (old.gate) old.gate.whenIdle(end)
+  else end()
 }
 
-/** Promesse limitée dans le temps ; au dépassement, le pool est remplacé. */
-function withTimeout<T>(run: (resolve: (v: T) => void, reject: (e: unknown) => void) => void, ms: number, what: string, url: string): Promise<T> {
-  const state = globalThis.__gamPool!
-  const generation = state.generation
+/**
+ * Lance `run` à son tour dans la file du pool (s'il en a une), limité dans le temps ;
+ * au dépassement, le pool est remplacé.
+ */
+function guarded<T>(state: PoolState, pool: Pool, run: (resolve: (v: T) => void, reject: (e: unknown) => void) => void, ms: number, what: string, url: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
+    let done: Done = () => {}
+    const settle = <V>(fn: (v: V) => void) => (v: V) => {
+      clearTimeout(timer)
+      done()
+      fn(v)
+    }
     const timer = setTimeout(() => {
+      done(true)
       const error = new DatabaseTimeoutError(what, ms)
-      replacePool(state, generation, url, error.message)
+      replacePool(state, pool, url, error.message)
       reject(error)
     }, ms)
-    run(
-      (v) => {
-        clearTimeout(timer)
-        resolve(v)
-      },
-      (e) => {
-        clearTimeout(timer)
-        reject(e)
-      }
-    )
+    const start = () => run(settle(resolve), settle(reject))
+    if (pool.gate) done = pool.gate.enter(start)
+    else start()
   })
 }
 
 function guardedSql(url: string): Sql {
-  const state = globalThis.__gamPool!
+  const state = globalThis.__gamDb!
   const handler: ProxyHandler<Sql> = {
     apply(_target, _this, args: unknown[]) {
-      const query = Reflect.apply(state.sql, undefined, args)
+      const pool = state.pool
+      const query = Reflect.apply(pool.sql, undefined, args)
       // Seuls les gabarits sql`…` réellement attendus sont limités dans le temps ;
       // un fragment inclus dans une autre requête n'est jamais attendu seul.
       if (!(Array.isArray(args[0]) && 'raw' in args[0]) || typeof query?.then !== 'function') return query
       const original = query.then
-      let guarded: Promise<unknown> | null = null
+      let result: Promise<unknown> | null = null
       query.then = function (onFulfilled?: (v: unknown) => unknown, onRejected?: (e: unknown) => unknown) {
-        guarded ??= withTimeout((res, rej) => original.call(query, res, rej), QUERY_TIMEOUT_MS, shortSql(args[0] as string[]), url)
-        return guarded.then(onFulfilled, onRejected)
+        result ??= guarded(state, pool, (res, rej) => original.call(query, res, rej), QUERY_TIMEOUT_MS, shortSql(args[0] as string[]), url)
+        return result.then(onFulfilled, onRejected)
       }
       return query
     },
     get(_target, prop) {
-      const value = Reflect.get(state.sql, prop)
+      const pool = state.pool
+      const value = Reflect.get(pool.sql, prop)
       if (prop === 'begin' && typeof value === 'function') {
         return (...args: unknown[]) =>
-          withTimeout((res, rej) => (value as (...a: unknown[]) => Promise<unknown>).apply(state.sql, args).then(res, rej), TRANSACTION_TIMEOUT_MS, 'transaction', url)
+          guarded(state, pool, (res, rej) => (value as (...a: unknown[]) => Promise<unknown>).apply(pool.sql, args).then(res, rej), TRANSACTION_TIMEOUT_MS, 'transaction', url)
       }
       return value
     },
@@ -178,9 +243,9 @@ function guardedSql(url: string): Sql {
 export function getSql(): Sql | null {
   const url = config.databaseUrl
   if (!url) return null
-  globalThis.__gamPool ??= { sql: createSql(url, config.dbPoolMax, { serverTimeouts: true }), generation: 0 }
-  globalThis.__gamSql ??= guardedSql(url)
-  return globalThis.__gamSql
+  globalThis.__gamDb ??= { pool: createPool(url) }
+  globalThis.__gamDbSql ??= guardedSql(url)
+  return globalThis.__gamDbSql
 }
 
 export function requireSql(): Sql {

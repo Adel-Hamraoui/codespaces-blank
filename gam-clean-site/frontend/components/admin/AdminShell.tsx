@@ -6,12 +6,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState, type ReactNode } from 'react'
+import { useFormStatus } from 'react-dom'
 import {
   ExternalLink,
   FileText,
   History,
   Inbox,
   LayoutDashboard,
+  LoaderCircle,
   LogOut,
   Menu,
   Star,
@@ -20,10 +22,34 @@ import {
   X,
 } from 'lucide-react'
 import logo from '@/frontend/assets/brand/logo-dark.png'
+import { usePendingTooLong } from '@/frontend/lib/use-form-action'
 import { can } from '@/shared/auth/permissions'
 import { ADMIN_ROLES, labelOf } from '@/shared/constants'
 import type { AdminUser } from '@/shared/types/admin'
+import { DevNavigationNotice } from './DevNavigationNotice'
 import styles from './admin.module.css'
+
+/** Déconnexion : indicateur pendant l'envoi, message si la réponse tarde anormalement. */
+function LogoutButton() {
+  const { pending } = useFormStatus()
+  const stalled = usePendingTooLong(pending)
+  return (
+    <>
+      <button type="submit" className={styles.footLink} disabled={pending}>
+        {pending ? <LoaderCircle size={16} aria-hidden="true" className="spin" /> : <LogOut size={16} aria-hidden="true" />}
+        Se déconnecter
+      </button>
+      {stalled && (
+        <p className={styles.footNotice} role="alert">
+          La déconnexion tarde.{' '}
+          <button type="button" onClick={() => window.location.reload()}>
+            Recharger la page
+          </button>
+        </p>
+      )}
+    </>
+  )
+}
 
 type Props = {
   brandName: string
@@ -129,15 +155,16 @@ export function AdminShell({ brandName, user, counts, logoutAction, children }: 
             <span className="sr-only"> (nouvel onglet)</span>
           </a>
           <form action={logoutAction}>
-            <button type="submit" className={styles.footLink}>
-              <LogOut size={16} aria-hidden="true" /> Se déconnecter
-            </button>
+            <LogoutButton />
           </form>
         </div>
       </aside>
 
       <main id="contenu-admin" className={styles.main} tabIndex={-1}>
-        <div className={styles.content}>{children}</div>
+        <div className={styles.content}>
+          {process.env.NODE_ENV !== 'production' && <DevNavigationNotice />}
+          {children}
+        </div>
       </main>
     </div>
   )

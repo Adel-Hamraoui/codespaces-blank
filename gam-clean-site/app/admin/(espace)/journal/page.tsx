@@ -4,6 +4,9 @@ import { listAudit } from '@/backend/modules/audit/log'
 import { requireAdmin } from '@/backend/modules/auth/guard'
 import { AuditView } from '@/frontend/views/admin/AuditView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Journal' }
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }

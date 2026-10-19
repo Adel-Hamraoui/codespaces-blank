@@ -3,6 +3,9 @@ import { changePasswordAction } from '@/backend/actions/auth'
 import { requireAdmin } from '@/backend/modules/auth/guard'
 import { AccountView } from '@/frontend/views/admin/AccountView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Mon compte' }
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }

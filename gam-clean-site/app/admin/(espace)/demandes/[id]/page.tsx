@@ -11,6 +11,9 @@ import { can } from '@/shared/auth/permissions'
 
 type Props = { params: Promise<{ id: string }> }
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `Demande n° ${(await params).id}` }
 }

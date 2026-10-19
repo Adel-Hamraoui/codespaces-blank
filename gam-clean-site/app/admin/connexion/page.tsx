@@ -5,6 +5,10 @@ import { LoginView } from '@/frontend/views/admin/LoginView'
 
 export const metadata: Metadata = { title: 'Connexion' }
 
+// La page lit l'adresse demandée avant la connexion (paramètre « suite ») : son
+// affichage peut attendre le serveur, comme le reste du back-office.
+export const instant = false
+
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
 export default async function LoginPage({ searchParams }: Props) {

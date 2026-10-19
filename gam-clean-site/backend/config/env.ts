@@ -10,6 +10,8 @@ export const config = {
   isProduction: env.NODE_ENV === 'production',
   databaseUrl: env.DATABASE_URL || null,
   dbPoolMax: Math.min(Math.max(Number(env.DB_POOL_MAX) || 3, 1), 20),
+  /** Requêtes préparées (connexion directe ou Session pooler uniquement, voir backend/db/client.ts). */
+  dbPreparedStatements: env.DB_PREPARED_STATEMENTS === 'true',
   /** Secret applicatif (empreintes HMAC des adresses IP pour l'anti-abus). */
   appSecret: env.APP_SECRET || null,
   cronSecret: env.CRON_SECRET || null,

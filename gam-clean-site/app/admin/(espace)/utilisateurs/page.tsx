@@ -5,6 +5,9 @@ import { requireAdmin } from '@/backend/modules/auth/guard'
 import { listUsers } from '@/backend/modules/users/repository'
 import { UsersView } from '@/frontend/views/admin/UsersView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Utilisateurs' }
 
 export default async function UsersPage() {

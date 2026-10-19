@@ -12,6 +12,9 @@ import { ReviewsView } from '@/frontend/views/admin/ReviewsView'
 import { REVIEW_STATUSES } from '@/shared/constants'
 import { isOneOf } from '@/shared/validation/common'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Avis clients' }
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }

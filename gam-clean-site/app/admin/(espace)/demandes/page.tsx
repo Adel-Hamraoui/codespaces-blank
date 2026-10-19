@@ -7,6 +7,9 @@ import { listAssignableUsers } from '@/backend/modules/users/repository'
 import { LeadsView } from '@/frontend/views/admin/LeadsView'
 import { parseLeadFilters } from '@/shared/validation/filters'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Demandes' }
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }

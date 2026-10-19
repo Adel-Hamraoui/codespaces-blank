@@ -2,7 +2,7 @@
 // Accès PostgreSQL (Supabase) — un seul pool par instance serverless.
 // ----------------------------------------------------------------------------
 // - Compatible avec le pooler Supabase en mode « transaction » (port 6543) :
-//   prepare: false (les requêtes préparées nommées n'y sont pas supportées).
+//   requêtes préparées désactivées par défaut (non prises en charge par ce pooler).
 // - SSL exigé hors réseau local (ou sslmode dans l'URL).
 // - Toutes les requêtes passent par des gabarits paramétrés (pas d'injection SQL).
 // ============================================================================
@@ -26,14 +26,37 @@ function isLocal(url: string) {
   }
 }
 
+/**
+ * Requêtes préparées : un aller-retour réseau par requête au lieu de deux (sans
+ * elles, postgres.js fait décrire chaque requête paramétrée avant de l'exécuter).
+ * Option DB_PREPARED_STATEMENTS=true, réservée à une connexion directe ou au
+ * « Session pooler » ; toujours désactivées avec le « Transaction pooler » (port 6543).
+ */
+function usePreparedStatements(url: string) {
+  if (!config.dbPreparedStatements) return false
+  let port = ''
+  try {
+    port = new URL(url).port
+  } catch {}
+  if (port === '6543') {
+    console.warn('[base] DB_PREPARED_STATEMENTS ignorée : le Transaction pooler (port 6543) ne prend pas en charge les requêtes préparées.')
+    return false
+  }
+  return true
+}
+
 export function createSql(url: string, max = config.dbPoolMax) {
   const explicitSsl = /[?&]sslmode=/.test(url)
   return postgres(url, {
     max,
-    idle_timeout: 20,
+    // Connexions inactives fermées après 20 s en production (instances serverless).
+    // Hors production, la base est souvent distante (Supabase depuis un poste) : chaque
+    // reconnexion coûte la négociation TLS et l'authentification (≈ 1,4 s mesurée avec
+    // 200 ms d'aller-retour), d'où des connexions gardées 10 minutes.
+    idle_timeout: config.isProduction ? 20 : 600,
     connect_timeout: 10,
     max_lifetime: 60 * 30,
-    prepare: false,
+    prepare: usePreparedStatements(url),
     ssl: explicitSsl ? undefined : isLocal(url) ? false : 'require',
     onnotice: () => {},
     connection: { application_name: 'gam-clean-site' },

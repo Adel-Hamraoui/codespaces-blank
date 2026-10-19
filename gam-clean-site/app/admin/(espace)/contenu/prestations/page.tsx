@@ -4,6 +4,9 @@ import { requireAdmin } from '@/backend/modules/auth/guard'
 import { listServicesAdmin } from '@/backend/modules/content/repository'
 import { ServicesAdminView } from '@/frontend/views/admin/ServicesAdminView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Prestations' }
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }

@@ -51,6 +51,9 @@ const nextConfig: NextConfig = {
   partialPrefetching: false,
   // Pilote PostgreSQL chargé tel quel par Node.js (pas d'empaquetage).
   serverExternalPackages: ['postgres'],
+  // Développement uniquement : en bas à gauche (position par défaut), l'indicateur
+  // Next.js DevTools recouvre le bouton « Se déconnecter » du back-office.
+  devIndicators: { position: 'bottom-right' },
   // CSS servi en fichiers (mis en cache d'une page à l'autre). Mesuré avec Lighthouse :
   // l'intégrer au HTML (experimental.inlineCss) gagnait ~0,2 s au premier affichage
   // mais doublait le poids de chaque page et triplait le temps de blocage.

@@ -92,7 +92,9 @@ Action (formulaire) → backend/actions/….ts ('use server')
 
 - **Sessions** (`backend/modules/auth/session.ts`) : jeton aléatoire de 256 bits dans un cookie `HttpOnly`, `Secure`, `SameSite=Lax` (préfixe `__Host-` en production) ; seule son empreinte SHA-256 est en base. Durée de 12 h maximum, fermeture après 2 h d'inactivité, activité enregistrée au plus toutes les 5 minutes.
 - **Droits** : une seule matrice (`shared/auth/permissions.ts`), utilisée par le serveur pour autoriser et par l'interface pour masquer ce qui n'est pas permis.
-- **Formulaires** (`frontend/lib/use-form-action.ts`) : la saisie est conservée en cas d'erreur de validation (React 19 vide sinon le formulaire après chaque envoi).
+- **Formulaires** (`frontend/lib/use-form-action.ts`) : la saisie est conservée en cas d'erreur de validation (React 19 vide sinon le formulaire après chaque envoi). Au-delà de 15 secondes d'attente, un message propose de recharger la page au lieu de laisser un indicateur tourner sans fin.
+- **Changements de page** : `app/admin/(espace)/loading.tsx` affiche immédiatement un état de chargement pendant que le serveur répond. Les layouts et pages du back-office déclarent `export const instant = false` : ils vérifient la session avant tout affichage, une attente que la validation « Instant » de Next.js signalerait sinon en développement.
+- **Requêtes** : le layout lance la vérification de session et les compteurs du menu en parallèle ; les pages ne lisent leurs données qu'après la vérification de session et des droits.
 
 ### 4. Avis clients
 

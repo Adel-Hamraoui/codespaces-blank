@@ -5,6 +5,9 @@ import { fetchSettingsRow, listClaimsAdmin } from '@/backend/modules/content/rep
 import { dashboardStats, listLeads } from '@/backend/modules/leads/repository'
 import { DashboardView } from '@/frontend/views/admin/DashboardView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Tableau de bord' }
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }

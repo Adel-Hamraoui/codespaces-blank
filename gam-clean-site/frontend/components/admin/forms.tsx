@@ -55,6 +55,24 @@ export function SubmitButton({
 }
 
 /**
+ * Message affiché quand une opération dépasse le délai normal, au lieu d'un
+ * indicateur de chargement sans fin. Une action ne peut pas être annulée une
+ * fois envoyée : la personne vérifie après rechargement avant de recommencer.
+ */
+export function StallNotice({ navigation }: { navigation?: boolean }) {
+  return (
+    <Flash tone="error">
+      {navigation
+        ? 'La page met plus de temps que prévu à s’afficher.'
+        : 'Le serveur met plus de temps que prévu à répondre. L’opération a peut-être déjà été enregistrée : vérifiez-le après le rechargement avant de recommencer.'}{' '}
+      <button type="button" className={`${styles.btn} ${styles.btnSecondary} ${styles.btnSmall}`} onClick={() => window.location.reload()}>
+        Recharger la page
+      </button>
+    </Flash>
+  )
+}
+
+/**
  * Formulaire relié à une action serveur : la saisie est conservée en cas
  * d'erreur, le message de résultat s'affiche au-dessus des champs.
  */
@@ -73,7 +91,7 @@ export function ActionForm({
   /** Contenu dépendant du résultat (erreurs par champ). */
   render?: (state: ActionState) => ReactNode
 }) {
-  const { state, formProps } = useFormAction(action)
+  const { state, stalled, formProps } = useFormAction(action)
   const ref = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
@@ -83,6 +101,7 @@ export function ActionForm({
   const hasFieldErrors = !state.ok && state.fieldErrors && Object.keys(state.fieldErrors).length > 0
   return (
     <form ref={ref} {...formProps} className={`${styles.form} ${className ?? ''}`} noValidate>
+      {stalled && <StallNotice />}
       {state.message && <Flash tone={state.ok ? 'ok' : 'error'}>{state.message}</Flash>}
       {!state.message && hasFieldErrors && <Flash tone="error">Certains champs sont à corriger.</Flash>}
       {render ? render(state) : children}

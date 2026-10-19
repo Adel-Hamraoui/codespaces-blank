@@ -4,6 +4,9 @@ import { requireAdmin } from '@/backend/modules/auth/guard'
 import { listClaimsAdmin, listFaqAdmin, listSectorsAdmin, listServicesAdmin } from '@/backend/modules/content/repository'
 import { ContentHubView } from '@/frontend/views/admin/ContentHubView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Contenu du site' }
 
 export default async function ContentPage() {

@@ -5,6 +5,9 @@ import { requireAdmin } from '@/backend/modules/auth/guard'
 import { listSectorsAdmin, listServicesAdmin } from '@/backend/modules/content/repository'
 import { SectorsAdminView } from '@/frontend/views/admin/SectorsAdminView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Secteurs d’intervention' }
 
 export default async function SectorsAdminPage() {

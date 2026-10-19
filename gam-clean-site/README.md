@@ -23,7 +23,7 @@ Site de GAM CLEAN, entreprise de nettoyage professionnel basée à Bondy (93), a
 10. [Connecter le dépôt à Vercel et déployer](#10-connecter-le-dépôt-à-vercel-et-déployer)
 11. [Connecter un nom de domaine](#11-connecter-un-nom-de-domaine)
 12. [Tests et contrôles qualité](#12-tests-et-contrôles-qualité)
-13. [Annexes : structure, sécurité, mesure d'audience, redirections, check-list](#annexes)
+13. [Annexes : structure, sécurité, mesure d'audience, redirections, dépannage, check-list](#annexes)
 
 ---
 
@@ -93,6 +93,8 @@ Autres commandes :
 | `npm run test:db` | Tests d'intégration PostgreSQL (base `*_test` dédiée) |
 | `npm run test:e2e` | Tests de bout en bout dans un navigateur (base `*_e2e` dédiée) |
 | `npm run db:benchmark` | Mesure des requêtes sur un volume synthétique (base `*_test`) |
+
+En cas de lenteur ou de blocage du back-office en local, voir [Dépannage du back-office en développement](#dépannage-du-back-office-en-développement).
 
 ## 4. Le back-office
 
@@ -179,6 +181,7 @@ Le modèle est `.env.example`. **Ne commitez jamais de valeur réelle** : `.env`
 | `CONTACT_TO_EMAIL` | Recommandée | Boîte qui reçoit les demandes. Par défaut : l'e-mail des coordonnées du site. |
 | `CONTACT_FROM_EMAIL` | Recommandée | Expéditeur (section 7). |
 | `DB_POOL_MAX` | Non | Connexions par instance (1 à 20, défaut 3). |
+| `DB_PREPARED_STATEMENTS` | Non | `true` : un aller-retour réseau par requête au lieu de deux. Uniquement avec une connexion directe ou le *Session pooler* (port 5432), par exemple en développement local ; ignoré avec le *Transaction pooler* (port 6543). |
 | `SEND_CUSTOMER_CONFIRMATION` | Non | `true` pour l'accusé de réception (domaine vérifié requis). |
 | `CONTACT_DELIVERY_MODE` | Non | `log` en développement uniquement. |
 | `NEXT_PUBLIC_ANALYTICS_PROVIDER` | Non | `vercel` ou `plausible` (annexes). |
@@ -309,6 +312,32 @@ Configurées en 308 (permanentes) dans `next.config.ts` :
 | `/nos-engagements` | `/a-propos` |
 | `/references` | `/a-propos` |
 | `/nous-localiser` | `/contact` |
+
+### Dépannage du back-office en développement
+
+**L'écran reste en chargement après un clic ou un enregistrement, et un rechargement complet (F5) répare.** Vérifiez d'abord le cookie `next-instant-navigation-testing`. Le *Navigation Inspector* des Next.js DevTools le pose pour mettre les navigations en pause (option *Pause on navigations*). Tant qu'il existe, Next.js retient les changements de page en développement. Ce cookie est lié à `localhost` et non au port : un autre projet Next.js ouvert en local peut le laisser derrière lui.
+
+- Le back-office affiche alors un bandeau rouge, en développement uniquement, avec un bouton « Désactiver et recharger ».
+- Sinon, fermez le panneau *Navigation Inspector*, ou supprimez le cookie dans les outils du navigateur (*Application → Cookies → localhost*).
+- Ce mécanisme n'existe pas en production.
+
+**Le bouton « Se déconnecter » ne réagit pas.** En bas à gauche, l'indicateur des Next.js DevTools le recouvrait. L'indicateur est désormais placé en bas à droite (`devIndicators` dans `next.config.ts`).
+
+**Tout est lent avec une base Supabase distante.** Mesuré avec 200 ms d'aller-retour réseau :
+
+- chaque requête paramétrée coûte deux allers-retours (environ 400 ms) ;
+- chaque nouvelle connexion coûte environ 1,4 s (chiffrement et authentification).
+
+Pour accélérer le développement local :
+
+- utilisez le *Session pooler* (port 5432) dans `DATABASE_URL` avec `DB_PREPARED_STATEMENTS=true`, ce qui divise par deux le temps des requêtes ;
+- ou utilisez une base PostgreSQL locale.
+
+Hors production, les connexions inactives restent ouvertes 10 minutes au lieu de 20 secondes. Au-delà de 15 secondes d'attente, les formulaires du back-office affichent un message avec un bouton de rechargement.
+
+**Projet dans un dossier synchronisé (OneDrive, Dropbox…).** Next.js écrit de très nombreux fichiers dans `.next` : la synchronisation peut ralentir ou verrouiller ces fichiers. Placez le projet hors du dossier synchronisé, par exemple `C:\dev\gam-clean-site`.
+
+**En production**, choisissez pour les fonctions Vercel la même région que la base Supabase. Le réglage s'appelle *Function Region* dans les paramètres du projet Vercel ; on peut aussi utiliser la clé `regions` de `vercel.json` (intitulés à vérifier dans la documentation Vercel). L'aller-retour vers la base devient alors très court.
 
 ### Check-list avant mise en ligne
 

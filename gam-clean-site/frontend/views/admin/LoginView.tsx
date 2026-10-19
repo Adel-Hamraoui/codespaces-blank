@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { LogIn } from 'lucide-react'
 import logo from '@/frontend/assets/brand/logo-light.png'
-import { SubmitButton, TextField, type FormAction } from '@/frontend/components/admin/forms'
+import { StallNotice, SubmitButton, TextField, type FormAction } from '@/frontend/components/admin/forms'
 import { Flash, adminStyles as styles } from '@/frontend/components/admin/ui'
 import { useFormAction } from '@/frontend/lib/use-form-action'
 
@@ -16,7 +16,7 @@ type Props = {
 }
 
 export function LoginView({ action, next, loggedOut, brandName }: Props) {
-  const { state, formProps } = useFormAction(action)
+  const { state, stalled, formProps } = useFormAction(action)
   const errors = state.fieldErrors ?? {}
   return (
     <div className={styles.loginPage}>
@@ -26,6 +26,7 @@ export function LoginView({ action, next, loggedOut, brandName }: Props) {
         <p>Espace réservé à l’équipe de {brandName}.</p>
         {loggedOut && !state.message && <Flash tone="info">Vous êtes déconnecté.</Flash>}
         <form {...formProps} className={styles.form} noValidate>
+          {stalled && <StallNotice />}
           {state.message && <Flash tone="error">{state.message}</Flash>}
           <input type="hidden" name="suite" value={next ?? ''} />
           <TextField label="Adresse e-mail" name="email" type="email" autoComplete="username" required error={errors.email} />

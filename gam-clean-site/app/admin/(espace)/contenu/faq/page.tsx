@@ -5,6 +5,9 @@ import { requireAdmin } from '@/backend/modules/auth/guard'
 import { listFaqAdmin, listServicesAdmin } from '@/backend/modules/content/repository'
 import { FaqAdminView } from '@/frontend/views/admin/FaqAdminView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Questions fréquentes' }
 
 export default async function FaqAdminPage() {

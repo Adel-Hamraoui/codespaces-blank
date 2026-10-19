@@ -32,7 +32,7 @@ function CreateUserForm({ action }: { action: PasswordAction }) {
   const { state, formProps } = useFormAction(action)
   const e = state.fieldErrors ?? {}
   return (
-    <form {...formProps} className={styles.form} noValidate key={state.temporaryPassword ?? 'nouveau'}>
+    <form key={state.temporaryPassword ?? 'nouveau'} {...formProps} className={styles.form} noValidate>
       <TemporaryPassword state={state} />
       <div className={styles.formRow}>
         <TextField label="Nom affiché" name="displayName" required error={e.displayName} />

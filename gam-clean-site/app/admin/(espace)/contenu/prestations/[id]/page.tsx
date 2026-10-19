@@ -6,6 +6,9 @@ import { requireAdmin } from '@/backend/modules/auth/guard'
 import { fetchServiceForEdit, listServicesAdmin } from '@/backend/modules/content/repository'
 import { ServiceEditorView } from '@/frontend/views/admin/ServiceEditorView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Modifier une prestation' }
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }

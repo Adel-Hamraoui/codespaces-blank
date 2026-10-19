@@ -5,6 +5,9 @@ import { requireAdmin } from '@/backend/modules/auth/guard'
 import { listServicesAdmin } from '@/backend/modules/content/repository'
 import { ServiceEditorView } from '@/frontend/views/admin/ServiceEditorView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Nouvelle prestation' }
 
 export default async function NewServicePage() {

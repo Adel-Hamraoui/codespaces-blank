@@ -60,7 +60,7 @@ export function NewInvitationForm({ action }: { action: (prev: InvitationState, 
   const { state, formProps } = useFormAction(action)
   const errors = state.fieldErrors ?? {}
   return (
-    <form {...formProps} className={styles.form} noValidate key={state.link ?? 'nouvelle'}>
+    <form key={state.link ?? 'nouvelle'} {...formProps} className={styles.form} noValidate>
       {state.message && <Flash tone={state.ok ? 'ok' : 'error'}>{state.message}</Flash>}
       {state.link && <CopyField label="Lien personnel à transmettre" value={state.link} />}
       <div className={styles.formRow}>

@@ -6,6 +6,9 @@ import { fetchSettingsRow } from '@/backend/modules/content/repository'
 import { EmptyState } from '@/frontend/components/admin/ui'
 import { SettingsView } from '@/frontend/views/admin/SettingsView'
 
+// Page protégée : elle vérifie la session avant de s'afficher (navigation bloquante assumée).
+export const instant = false
+
 export const metadata: Metadata = { title: 'Entreprise et coordonnées' }
 
 export default async function SettingsPage() {

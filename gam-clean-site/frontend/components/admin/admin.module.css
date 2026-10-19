@@ -178,6 +178,29 @@
   text-decoration: none;
 }
 
+.footLink:disabled {
+  cursor: progress;
+}
+
+/* Déconnexion anormalement longue */
+.footNotice {
+  margin: var(--sp-1) 0 0;
+  padding-inline: var(--sp-2);
+  color: #fecaca;
+  font-size: var(--fs-sm);
+}
+
+.footNotice button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .topbar {
   position: sticky;
   top: 0;
@@ -271,6 +294,22 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
+}
+
+/* ---------- Chargement d'une page (loading.tsx) ---------- */
+.loading {
+  display: grid;
+  gap: var(--sp-4);
+  padding-block: var(--sp-6);
+}
+
+.loadingLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 /* ---------- Surfaces ---------- */
